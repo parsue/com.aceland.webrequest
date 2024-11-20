@@ -3,8 +3,6 @@
     "rootNamespace": "AceLand.WebRequest",
     "references": [
         "GUID:fd3db1db7b01a574a9a03a3001a7d424",
-        "GUID:127e0b8e58c2f314cbd20fa8bb20a275",
-        "GUID:366aea0de3e2f424dad570376e9d3229",
         "GUID:0b6e3ff925df76b408774ed4b623807b",
         "GUID:9811992f43a01034cbf814ec6fbeeb44"
     ],
