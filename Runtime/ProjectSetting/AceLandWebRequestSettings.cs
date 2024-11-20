@@ -1,5 +1,6 @@
 using System;
 using AceLand.Library.BuildLeveling;
+using AceLand.Library.Extensions;
 using AceLand.Library.ProjectSetting;
 using UnityEngine;
 
@@ -10,14 +11,20 @@ namespace AceLand.WebRequest.ProjectSetting
         [SerializeField] private BuildLevel loggingLevel = BuildLevel.Production;
         [SerializeField] private BuildLevel resultLoggingLevel = BuildLevel.Development;
         [SerializeField] private bool checkJsonBeforeSend;
-        [SerializeField] private bool forceHttpsScheme;
-        [SerializeField] private bool addTimeInHeader;
+        [SerializeField] private bool forceHttpsScheme = true;
+        [SerializeField] private bool addTimeInHeader = true;
         [SerializeField] private string timeKey = "Time";
         [SerializeField, Min(0)] private int requestTimeout = 3000;
         [SerializeField, Min(0)] private int longRequestTimeout = 15000;
         [SerializeField] private int requestRetry = 3;
         [SerializeField] private int[] retryInterval = { 400, 800, 1600, 3200, 6400, 12800, 25600 };
 
+        [SerializeField] private string currentApiDomain;
+        [SerializeField] private string apiSection;
+        [SerializeField] private string apiDomain;
+        [SerializeField] private string apiVersion;
+
+        public string CurrentApiDomain => currentApiDomain;
         public BuildLevel LoggingLevel => loggingLevel;
         public BuildLevel ResultLoggingLevel => resultLoggingLevel;
         public bool CheckJsonBeforeSend => checkJsonBeforeSend;
