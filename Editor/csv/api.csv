@@ -1,0 +1,4 @@
+dev,dev-api.vexmeta.io,v1
+uat,uat-api.vexmeta.io,v1
+preprd,preprd-api.vexmeta.io,v1
+prd,api.vexmeta.io,v1

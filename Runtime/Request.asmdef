@@ -1,0 +1,18 @@
+{
+    "name": "AceLand.WebRequest",
+    "rootNamespace": "AceLand.WebRequest",
+    "references": [
+        "GUID:127e0b8e58c2f314cbd20fa8bb20a275",
+        "GUID:1a972ba99344f904a9d50dc99b31faba",
+        "GUID:0b6e3ff925df76b408774ed4b623807b"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
