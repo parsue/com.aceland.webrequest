@@ -10,7 +10,7 @@ namespace AceLand.WebRequest
 {
     public static partial class Request
     {
-        public static AceLandWebRequestSettings Settings
+        internal static AceLandWebRequestSettings Settings
         {
             get
             {

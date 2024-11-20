@@ -69,7 +69,7 @@ namespace AceLand.WebRequest.Editor.ProjectSettingsProvider
                 out var addTimeInHeader, out var timeKey,
                 out var requestTimeout, out var longRequestTimeout,
                 out var requestRetry, out var retryInterval,
-                out var currentApiDomain,
+                out var apiUrl,
                 out var apiSection, out var apiDomain, out var apiVersion);
 
             EditorGUI.BeginChangeCheck();
@@ -113,8 +113,13 @@ namespace AceLand.WebRequest.Editor.ProjectSettingsProvider
             EditorGUILayout.EndHorizontal();
             var api = (apiDomain.stringValue.IsNullOrEmptyOrWhiteSpace() ? "" : $"{apiDomain.stringValue}") +
                                (apiVersion.stringValue.IsNullOrEmptyOrWhiteSpace() ? "" : $"/{apiVersion.stringValue}");
-            currentApiDomain.stringValue = api;
-            EditorGUILayout.LabelField("https://" + api);
+            apiUrl.stringValue = api;
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.LabelField("Api Url", GUILayout.Width(64));
+            EditorGUI.BeginDisabledGroup(true);
+            EditorGUILayout.TextField("https://" + apiUrl.stringValue, GUILayout.Width(FIXED_PROPERTY_WIDTH - 64 - 14));
+            EditorGUI.EndDisabledGroup();
+            EditorGUILayout.EndHorizontal();
             EditorGUI.indentLevel--;
             
             EditorGUILayout.Space(12f);
@@ -221,7 +226,7 @@ namespace AceLand.WebRequest.Editor.ProjectSettingsProvider
             out SerializedProperty addTimeInHeader, out SerializedProperty timeKey,
             out SerializedProperty requestTimeout, out SerializedProperty longRequestTimeout,
             out SerializedProperty requestRetry, out SerializedProperty retryInterval,
-            out SerializedProperty currentApiDomain, 
+            out SerializedProperty apiUrl, 
             out SerializedProperty apiSection, out SerializedProperty apiDomain, out SerializedProperty apiVersion)
         {
             loggingLevel = _settings.FindProperty("loggingLevel");
@@ -234,7 +239,7 @@ namespace AceLand.WebRequest.Editor.ProjectSettingsProvider
             longRequestTimeout = _settings.FindProperty("longRequestTimeout");
             requestRetry = _settings.FindProperty("requestRetry");
             retryInterval = _settings.FindProperty("retryInterval");
-            currentApiDomain = _settings.FindProperty("currentApiDomain");
+            apiUrl = _settings.FindProperty("apiUrl");
             apiSection = _settings.FindProperty("apiSection");
             apiDomain = _settings.FindProperty("apiDomain");
             apiVersion = _settings.FindProperty("apiVersion");

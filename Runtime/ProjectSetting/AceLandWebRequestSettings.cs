@@ -2,6 +2,7 @@ using System;
 using AceLand.Library.BuildLeveling;
 using AceLand.Library.ProjectSetting;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace AceLand.WebRequest.ProjectSetting
 {
@@ -18,12 +19,12 @@ namespace AceLand.WebRequest.ProjectSetting
         [SerializeField] private int requestRetry = 3;
         [SerializeField] private int[] retryInterval = { 400, 800, 1600, 3200, 6400, 12800, 25600 };
 
-        [SerializeField] private string currentApiDomain;
+        [SerializeField] private string apiUrl;
         [SerializeField] private string apiSection;
         [SerializeField] private string apiDomain;
         [SerializeField] private string apiVersion;
 
-        public string CurrentApiDomain => currentApiDomain;
+        public string ApiUrl => apiUrl;
         public string ApiSection => apiSection;
         public string ApiDomain => apiDomain;
         public string ApiVersion => apiVersion;
