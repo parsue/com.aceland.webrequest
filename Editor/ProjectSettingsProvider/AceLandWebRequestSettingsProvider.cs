@@ -287,6 +287,11 @@ namespace AceLand.WebRequest.Editor.ProjectSettingsProvider
 
         private void CreateApiDataFile()
         {
+            if (!AssetDatabase.IsValidFolder(EDITOR_PATH))
+                AssetDatabase.CreateFolder("Assets", "Editor");
+            if (!AssetDatabase.IsValidFolder(FileFolder))
+                AssetDatabase.CreateFolder(EDITOR_PATH, ACELAND_FOLDER);
+
             AssetDatabase.CreateAsset(new TextAsset(string.Empty), AssetPath);
             Debug.Log($"API Section File is created : {AssetPath}");
         }

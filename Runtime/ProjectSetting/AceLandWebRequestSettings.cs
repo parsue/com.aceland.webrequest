@@ -1,6 +1,5 @@
 using System;
 using AceLand.Library.BuildLeveling;
-using AceLand.Library.Extensions;
 using AceLand.Library.ProjectSetting;
 using UnityEngine;
 
@@ -25,6 +24,9 @@ namespace AceLand.WebRequest.ProjectSetting
         [SerializeField] private string apiVersion;
 
         public string CurrentApiDomain => currentApiDomain;
+        public string ApiSection => apiSection;
+        public string ApiDomain => apiDomain;
+        public string ApiVersion => apiVersion;
         public BuildLevel LoggingLevel => loggingLevel;
         public BuildLevel ResultLoggingLevel => resultLoggingLevel;
         public bool CheckJsonBeforeSend => checkJsonBeforeSend;

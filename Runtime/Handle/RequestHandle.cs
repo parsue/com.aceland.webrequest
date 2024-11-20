@@ -8,7 +8,6 @@ using AceLand.Library.Disposable;
 using AceLand.TaskUtils;
 using AceLand.WebRequest.Core;
 using AceLand.WebRequest.ProjectSetting;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using UnityEngine;
 
@@ -47,10 +46,11 @@ namespace AceLand.WebRequest.Handle
         private static AceLandWebRequestSettings Settings => Request.Settings;
         
         public HttpResponseMessage Response { get; private set; }
+        public JToken Result { get; private set; }
         private HttpClient Client { get; set; }
         private HttpContent Content { get; set; }
         private IRequestBody Body { get; set; }
-        private CancellationTokenSource TokenSource { get; set; }
+        private CancellationTokenSource TokenSource { get; }
         private CancellationTokenSource LinkedTokenSource { get; set; }
         private CancellationToken LinkedToken => LinkedTokenSource.Token;
 
@@ -79,14 +79,15 @@ namespace AceLand.WebRequest.Handle
                             RequestMethod.Patch => await Client.PatchAsync(Body.Url, Content, LinkedToken),
                             _ => throw new ArgumentOutOfRangeException()
                         };
+                        
+                        var jsonResponse = await Response.Content.ReadAsStringAsync();
 
                         if (Response.IsSuccessStatusCode)
                         {
-                            var jsonResponse = await Response.Content.ReadAsStringAsync();
-                            var result = JsonConvert.DeserializeObject<JToken>(jsonResponse);
-                            Request.PrintSuccessLog(Body, result);
+                            Result = JToken.Parse(jsonResponse);
+                            Request.PrintSuccessLog(Body, Result);
                             
-                            return result;
+                            return Result;
                         }
                         
                         var code = (int)Response.StatusCode;
@@ -115,11 +116,17 @@ namespace AceLand.WebRequest.Handle
                     catch (Exception ex)
                     {
                         // For non-retryable errors, rethrow immediately
+                        if (Settings.LoggingLevel.IsAcceptedLevel())
+                            Debug.LogError($"Request failed: {ex.Message}\n" +
+                                           $"Exception:\n" +
+                                           $"{ex}");
                         throw new Exception($"Request failed: {ex.Message}", ex);
                     }
                 }
 
                 // Handle connection-related errors
+                if (Settings.LoggingLevel.IsAcceptedLevel())
+                    Debug.LogError($"Max retries reached. Request failed due to a connection error.");
                 throw new Exception("Max retries reached. Request failed due to a connection error.");
             }, LinkedToken);
         }
@@ -133,7 +140,6 @@ namespace AceLand.WebRequest.Handle
                                  $"{exception.Message}. Retry after {retryInterval} ms...\n" +
                                  $"Exception:\n{exception}");
             
-            //RenewLinkedTokenSource();
             await Task.Delay(retryInterval, LinkedToken);
         }
 
