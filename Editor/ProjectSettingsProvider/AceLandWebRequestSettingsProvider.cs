@@ -1,5 +1,6 @@
 using System.IO;
 using AceLand.Library.CSV;
+using AceLand.Library.Editor.Providers;
 using AceLand.Library.Extensions;
 using AceLand.WebRequest.ProjectSetting;
 using UnityEditor;
@@ -8,7 +9,7 @@ using UnityEngine.UIElements;
 
 namespace AceLand.WebRequest.Editor.ProjectSettingsProvider
 {
-    public class AceLandWebRequestSettingsProvider : SettingsProvider
+    public class AceLandWebRequestSettingsProvider : AceLandSettingsProvider
     {
         public const string SETTINGS_NAME = "Project/AceLand Web Request";
         
@@ -27,8 +28,6 @@ namespace AceLand.WebRequest.Editor.ProjectSettingsProvider
         private bool FolderExist => Directory.Exists(FileFolder);
         private bool AssetExist => File.Exists(AssetPath);
         
-        private SerializedObject _settings;
-        
         private ApiSectionData _oriSection = new();
         private ApiSectionData _section = new();
         private string _newSection; 
@@ -40,7 +39,7 @@ namespace AceLand.WebRequest.Editor.ProjectSettingsProvider
 
         public override void OnActivate(string searchContext, VisualElement rootElement)
         {
-            _settings = AceLandWebRequestSettings.GetSerializedSettings();
+            Settings = AceLandWebRequestSettings.GetSerializedSettings();
             InitApiSections();
         }
 
@@ -127,10 +126,18 @@ namespace AceLand.WebRequest.Editor.ProjectSettingsProvider
             if (!FolderExist || !AssetExist) DrawCreateApiContent();
             else DrawApiContent(apiSection, apiDomain, apiVersion);
             
-            if (!EditorGUI.EndChangeCheck()) return;
-
-            requestRetry.intValue = Mathf.Clamp(requestRetry.intValue, 0, retryInterval.arraySize);
-            _settings.ApplyModifiedPropertiesWithoutUndo();
+            EditorGUILayout.Space(20f);
+            
+            if (EditorGUI.EndChangeCheck())
+            {
+                requestRetry.intValue = Mathf.Clamp(requestRetry.intValue, 0, retryInterval.arraySize);
+                Undo.RecordObject(Settings.targetObject, "Apply Changes");
+                Settings.ApplyModifiedProperties();
+            }
+            else
+            {
+                Settings.ApplyModifiedPropertiesWithoutUndo();
+            }
         }
 
         private void ClearCurrentApiSection(SerializedProperty section, SerializedProperty domain, SerializedProperty version)
@@ -229,20 +236,20 @@ namespace AceLand.WebRequest.Editor.ProjectSettingsProvider
             out SerializedProperty apiUrl, 
             out SerializedProperty apiSection, out SerializedProperty apiDomain, out SerializedProperty apiVersion)
         {
-            loggingLevel = _settings.FindProperty("loggingLevel");
-            resultLoggingLevel = _settings.FindProperty("resultLoggingLevel");
-            checkJsonBeforeSend = _settings.FindProperty("checkJsonBeforeSend");
-            forceHttpsScheme = _settings.FindProperty("forceHttpsScheme");
-            addTimeInHeader = _settings.FindProperty("addTimeInHeader");
-            timeKey = _settings.FindProperty("timeKey");
-            requestTimeout = _settings.FindProperty("requestTimeout");
-            longRequestTimeout = _settings.FindProperty("longRequestTimeout");
-            requestRetry = _settings.FindProperty("requestRetry");
-            retryInterval = _settings.FindProperty("retryInterval");
-            apiUrl = _settings.FindProperty("apiUrl");
-            apiSection = _settings.FindProperty("apiSection");
-            apiDomain = _settings.FindProperty("apiDomain");
-            apiVersion = _settings.FindProperty("apiVersion");
+            loggingLevel = Settings.FindProperty("loggingLevel");
+            resultLoggingLevel = Settings.FindProperty("resultLoggingLevel");
+            checkJsonBeforeSend = Settings.FindProperty("checkJsonBeforeSend");
+            forceHttpsScheme = Settings.FindProperty("forceHttpsScheme");
+            addTimeInHeader = Settings.FindProperty("addTimeInHeader");
+            timeKey = Settings.FindProperty("timeKey");
+            requestTimeout = Settings.FindProperty("requestTimeout");
+            longRequestTimeout = Settings.FindProperty("longRequestTimeout");
+            requestRetry = Settings.FindProperty("requestRetry");
+            retryInterval = Settings.FindProperty("retryInterval");
+            apiUrl = Settings.FindProperty("apiUrl");
+            apiSection = Settings.FindProperty("apiSection");
+            apiDomain = Settings.FindProperty("apiDomain");
+            apiVersion = Settings.FindProperty("apiVersion");
         }
 
         private void DrawArrayWithDefaultExpanded(SerializedProperty arrayProperty)
