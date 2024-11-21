@@ -1,6 +1,6 @@
 {
   "name": "com.aceland.webrequest",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "displayName": "AceLand Web Request",
   "description": "AceLand Web Request is a Unity WebRequest implement package.",
   "unity": "2022.3",
@@ -19,8 +19,8 @@
     "api"
   ],
   "dependencies": {
-    "com.aceland.library": "1.0.2",
-    "com.aceland.taskutils": "1.0.2",
+    "com.aceland.library": "1.0.3",
+    "com.aceland.taskutils": "1.0.3",
     "com.unity.nuget.newtonsoft-json": "3.2.1"
   },
   "publishConfig": {
