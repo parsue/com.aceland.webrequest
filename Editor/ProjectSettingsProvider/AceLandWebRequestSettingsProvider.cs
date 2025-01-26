@@ -11,7 +11,7 @@ namespace AceLand.WebRequest.Editor.ProjectSettingsProvider
 {
     public class AceLandWebRequestSettingsProvider : AceLandSettingsProvider
     {
-        public const string SETTINGS_NAME = "Project/AceLand Web Request";
+        public const string SETTINGS_NAME = "Project/AceLand Packages/Web Request";
         
         private const string EDITOR_PATH = "Assets/Editor";
         private const string ACELAND_FOLDER = "AceLand";
