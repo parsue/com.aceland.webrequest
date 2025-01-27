@@ -62,7 +62,7 @@ namespace AceLand.WebRequest
             private readonly List<FormData> _bodyData = new();
             private readonly List<StreamData> _streamData = new();
 
-            public IRequestHandle Build()
+            public RequestHandle Build()
             {
                 if (!CheckUrl(_url))
                     throw new Exception($"Url is not https scheme : {_url}");
