@@ -13,7 +13,7 @@ using UnityEngine;
 
 namespace AceLand.WebRequest.Handle
 {
-    public class RequestHandle : DisposableObject, IRequestHandle
+    internal class RequestHandle : DisposableObject, IRequestHandle
     {
         public RequestHandle(IRequestBody body)
         {

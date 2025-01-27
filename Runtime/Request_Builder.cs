@@ -8,7 +8,7 @@ namespace AceLand.WebRequest
     {
         public interface IRequestBuilder
         {
-            RequestHandle Build();
+            IRequestHandle Build();
             IRequestBuilder WithLongRequest(); 
             IRequestBuilder WithTimeout(int ms); 
         }
@@ -33,7 +33,7 @@ namespace AceLand.WebRequest
 
             private readonly JsonBody _body = new();
 
-            public RequestHandle Build()
+            public IRequestHandle Build()
             {
                 if (!CheckUrl(_body.Url))
                     throw new Exception($"Url is not https scheme : {_body.Url}");

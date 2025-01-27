@@ -6,11 +6,6 @@ All notable changes to this project will be documented in this file.
 
 ---
 
-## [1.0.8] - 2025-1-27
-
-### Modify
-- Request Builder will return a concrete Request Handler instead of interface. User can build the handler with using keyword for automatic disposal.
-
 ## [1.0.7] - 2025-1-25
 
 ### Modify

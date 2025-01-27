@@ -2,7 +2,7 @@ using System;
 
 namespace AceLand.WebRequest.Core
 {
-    public interface IRequestBody
+    internal interface IRequestBody
     {
         RequestMethod RequestMethod { get; }
         DataType DataType { get; }
