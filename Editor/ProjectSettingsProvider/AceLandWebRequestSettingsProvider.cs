@@ -22,6 +22,8 @@ namespace AceLand.WebRequest.Editor.ProjectSettingsProvider
         private const int FIXED_VERSION_WIDTH = 60;
         private const int FIXED_SMALL_BUTTON_WIDTH = 18;
         private const int FIXED_NORMAL_BUTTON_WIDTH = 80;
+        private const int FIXED_KEY_WIDTH = 120;
+        private const int FIXED_VALUE_WIDTH = 200;
         
         private string FileFolder => $"{EDITOR_PATH}/{ACELAND_FOLDER}";
         private string AssetPath => $"{FileFolder}/{API_DATA_ASSET}";
@@ -67,6 +69,7 @@ namespace AceLand.WebRequest.Editor.ProjectSettingsProvider
             SerializedProperty(out var loggingLevel, out var resultLoggingLevel,
                 out var checkJsonBeforeSend, out var forceHttpsScheme,
                 out var addTimeInHeader, out var timeKey,
+                out var autoFillHeaders,
                 out var requestTimeout, out var longRequestTimeout,
                 out var requestRetry, out var retryInterval,
                 out var apiUrl,
@@ -89,6 +92,7 @@ namespace AceLand.WebRequest.Editor.ProjectSettingsProvider
             DrawFixWidthProperty(addTimeInHeader);
             if (addTimeInHeader.boolValue)
                 DrawFixWidthProperty(timeKey);
+            DrawHeadersArrayWithDefaultExpanded(autoFillHeaders);
             
             EditorGUILayout.Space(12f);
             EditorGUILayout.LabelField("Request Options (time unit: ms)", EditorStyles.boldLabel);
@@ -232,6 +236,7 @@ namespace AceLand.WebRequest.Editor.ProjectSettingsProvider
         private void SerializedProperty(out SerializedProperty loggingLevel, out SerializedProperty resultLoggingLevel,
             out SerializedProperty checkJsonBeforeSend, out SerializedProperty forceHttpsScheme,
             out SerializedProperty addTimeInHeader, out SerializedProperty timeKey,
+            out SerializedProperty autoFillHeaders, 
             out SerializedProperty requestTimeout, out SerializedProperty longRequestTimeout,
             out SerializedProperty requestRetry, out SerializedProperty retryInterval,
             out SerializedProperty apiUrl, 
@@ -243,6 +248,7 @@ namespace AceLand.WebRequest.Editor.ProjectSettingsProvider
             forceHttpsScheme = Settings.FindProperty("forceHttpsScheme");
             addTimeInHeader = Settings.FindProperty("addTimeInHeader");
             timeKey = Settings.FindProperty("timeKey");
+            autoFillHeaders = Settings.FindProperty("autoFillHeaders");
             requestTimeout = Settings.FindProperty("requestTimeout");
             longRequestTimeout = Settings.FindProperty("longRequestTimeout");
             requestRetry = Settings.FindProperty("requestRetry");
@@ -252,7 +258,64 @@ namespace AceLand.WebRequest.Editor.ProjectSettingsProvider
             apiDomain = Settings.FindProperty("apiDomain");
             apiVersion = Settings.FindProperty("apiVersion");
         }
+        
+        private void DrawHeadersArrayWithDefaultExpanded(SerializedProperty arrayProperty)
+        {
+            if (!arrayProperty.isArray) return;
+            
+            EditorGUILayout.BeginHorizontal();
+            
+            var fieldLabel = $"{arrayProperty.displayName} ({arrayProperty.arraySize})";
+            EditorGUILayout.LabelField(fieldLabel, GUILayout.Width(160));
+            
+            if (GUILayout.Button("+", GUILayout.Width(FIXED_SMALL_BUTTON_WIDTH)))
+            {
+                GUI.FocusControl(null);
+                arrayProperty.InsertArrayElementAtIndex(arrayProperty.arraySize);
+            }
 
+            if (GUILayout.Button("-", GUILayout.Width(FIXED_SMALL_BUTTON_WIDTH)))
+            {
+                GUI.FocusControl(null);
+                arrayProperty.DeleteArrayElementAtIndex(arrayProperty.arraySize - 1);
+                if (arrayProperty.arraySize == 0) arrayProperty.arraySize = 1;
+            }
+            
+            EditorGUILayout.EndHorizontal();
+
+            EditorGUI.indentLevel++;
+            
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.LabelField("Key", GUILayout.Width(FIXED_KEY_WIDTH));
+            EditorGUILayout.LabelField("Value", GUILayout.Width(FIXED_VALUE_WIDTH));
+            EditorGUILayout.EndHorizontal();
+            
+            for (var i = 0; i < arrayProperty.arraySize; i++)
+            {
+                var element = arrayProperty.GetArrayElementAtIndex(i);
+
+                EditorGUILayout.BeginHorizontal();
+
+                var key = element.FindPropertyRelative("key");
+                var value = element.FindPropertyRelative("value");
+                
+                EditorGUILayout.PropertyField(key, GUIContent.none, GUILayout.Width(FIXED_KEY_WIDTH));
+                EditorGUILayout.PropertyField(value, GUIContent.none, GUILayout.Width(FIXED_VALUE_WIDTH));
+
+                if (GUILayout.Button("-", GUILayout.Width(FIXED_SMALL_BUTTON_WIDTH)))
+                {
+                    GUI.FocusControl(null);
+                    arrayProperty.DeleteArrayElementAtIndex(i);
+                    if (arrayProperty.arraySize == 0) arrayProperty.arraySize = 1;
+                    break;
+                }
+
+                EditorGUILayout.EndHorizontal();
+            }
+            
+            EditorGUI.indentLevel--;
+        }
+        
         private void DrawArrayWithDefaultExpanded(SerializedProperty arrayProperty)
         {
             if (!arrayProperty.isArray) return;

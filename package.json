@@ -1,6 +1,6 @@
 {
   "name": "com.aceland.webrequest",
-  "version": "1.0.9",
+  "version": "1.0.10",
   "displayName": "AceLand Web Request",
   "description": "AceLand Web Request is a Unity WebRequest implement package.\n\nPlease visit our [Git Book](https://aceland-workshop.gitbook.io/aceland-unity-packages).",
   "unity": "2022.3",
@@ -19,13 +19,13 @@
     "api"
   ],
   "dependencies": {
-    "com.aceland.library": "1.0.10",
-    "com.aceland.taskutils": "1.0.5",
+    "com.aceland.library": "1.0.18",
+    "com.aceland.taskutils": "1.0.6",
     "com.unity.nuget.newtonsoft-json": "3.2.1"
   },
   "publishConfig": {
     "registry": "https://package.openupm.com"
   },
-  "documentationUrl": "https://aceland-workshop.gitbook.io/aceland-unity-packages",
+  "documentationUrl": "https://docs.parsue.io/aceland-unity-packages",
   "type": "utility"
 }

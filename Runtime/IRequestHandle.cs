@@ -8,6 +8,7 @@ namespace AceLand.WebRequest
     {
         HttpResponseMessage Response { get; }
         JToken Result { get; }
+        Task<T> Send<T>();
         Task<JToken> Send();
         void Cancel();
         void Dispose();

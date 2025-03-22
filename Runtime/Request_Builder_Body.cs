@@ -24,19 +24,19 @@ namespace AceLand.WebRequest
         
         public interface IRequestJsonBodyBuilder : IRequestBuilder
         {
-            IRequestJsonBodyBuilder WithHeader(string key, string value);
+            new IRequestJsonBodyBuilder WithHeader(string key, string value);
             IRequestJsonBodyBuilder WithContent(string json);
         }
 
         public interface IRequestFormBodyBuilder : IRequestBuilder
         {
-            IRequestFormBodyBuilder WithHeader(string key, string value);
+            new IRequestFormBodyBuilder WithHeader(string key, string value);
             IRequestFormBodyBuilder WithContent(string key, string value);
         }
 
         public interface IRequestMultipartBodyBuilder : IRequestBuilder
         {
-            IRequestMultipartBodyBuilder WithHeader(string key, string value);
+            new IRequestMultipartBodyBuilder WithHeader(string key, string value);
             IRequestMultipartBodyBuilder WithContent(string key, string value);
             IRequestMultipartBodyBuilder WithStreamData(string key, string filePath, string fileName);
             IRequestMultipartBodyBuilder WithStreamData(string key, byte[] data, string fileName);
@@ -112,22 +112,36 @@ namespace AceLand.WebRequest
                 return this;
             }
 
+            public IRequestBuilder WithHeader(string key, string value)
+            {
+                AddHeader(key, value);
+                return this;
+            }
+
             IRequestJsonBodyBuilder IRequestJsonBodyBuilder.WithHeader(string key, string value)
             {
-                _headers.Add(new FormData(key, value));
+                AddHeader(key, value);
                 return this;
             }
 
             IRequestFormBodyBuilder IRequestFormBodyBuilder.WithHeader(string key, string value)
             {
-                _bodyData.Add(new FormData(key, value));
+                AddHeader(key, value);
                 return this;
             }
 
             IRequestMultipartBodyBuilder IRequestMultipartBodyBuilder.WithHeader(string key, string value)
             {
-                _bodyData.Add(new FormData(key, value));
+                AddHeader(key, value);
                 return this;
+            }
+
+            private void AddHeader(string key, string value)
+            {
+                foreach (var header in _bodyData)
+                    if (header.Key == key) return;
+                
+                _bodyData.Add(new FormData(key, value));
             }
 
             IRequestJsonBodyBuilder IRequestJsonBodyBuilder.WithContent(string json)

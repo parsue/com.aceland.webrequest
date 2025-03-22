@@ -80,15 +80,21 @@ namespace AceLand.WebRequest
 
         private static List<FormData> AutoFillHeader()
         {
-            var header = new List<FormData>();
+            var headers = new List<FormData>();
             
             if (Settings.AddTimeInHeader)
             {
                 var time = $"{(DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10000}";
-                header.Add(new FormData(Settings.TimeKey, time));
+                headers.Add(new FormData(Settings.TimeKey, time));
             }
 
-            return header;
+            foreach (var header in Settings.AutoFillHeaders)
+            {
+                if (header.IsEmpty) continue;
+                headers.Add(new FormData(header.Key, header.Value));
+            }
+
+            return headers;
         }
 
         private static bool CheckUrl(Uri url)

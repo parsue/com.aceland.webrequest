@@ -60,75 +60,92 @@ namespace AceLand.WebRequest.Handle
             TokenSource?.Cancel();
         }
 
+        public Task<T> Send<T>()
+        {
+            return Task.Run(async () =>
+                {
+                    var result = await Send();
+                    var data = result.ToObject<T>();
+                    return data;
+                },
+                LinkedToken
+            );
+        }
+
         public Task<JToken> Send()
         {
             Request.PrintRequestLog(Body);
 
             return Task.Run(async () =>
-            {
-                for (var attempt = 1; attempt <= Settings.RequestRetry; attempt++)
                 {
-                    try
+                    for (var attempt = 1; attempt <= Settings.RequestRetry; attempt++)
                     {
-                        Response = Body.RequestMethod switch
+                        try
                         {
-                            RequestMethod.Post => await Client.PostAsync(Body.Url, Content, LinkedToken),
-                            RequestMethod.Get => await Client.GetAsync(Body.Url, LinkedToken),
-                            RequestMethod.Put => await Client.PutAsync(Body.Url, Content, LinkedToken),
-                            RequestMethod.Delete => await Client.DeleteAsync(Body.Url, LinkedToken),
-                            RequestMethod.Patch => await Client.PatchAsync(Body.Url, Content, LinkedToken),
-                            _ => throw new ArgumentOutOfRangeException()
-                        };
-                        
-                        var jsonResponse = await Response.Content.ReadAsStringAsync();
+                            Response = Body.RequestMethod switch
+                            {
+                                RequestMethod.Post => await Client.PostAsync(Body.Url, Content, LinkedToken),
+                                RequestMethod.Get => await Client.GetAsync(Body.Url, LinkedToken),
+                                RequestMethod.Put => await Client.PutAsync(Body.Url, Content, LinkedToken),
+                                RequestMethod.Delete => await Client.DeleteAsync(Body.Url, LinkedToken),
+                                RequestMethod.Patch => await Client.PatchAsync(Body.Url, Content, LinkedToken),
+                                _ => throw new ArgumentOutOfRangeException()
+                            };
 
-                        if (Response.IsSuccessStatusCode)
-                        {
-                            Result = JToken.Parse(jsonResponse);
-                            Request.PrintSuccessLog(Body, Result);
-                            
-                            return Result;
+                            var jsonResponse = await Response.Content.ReadAsStringAsync();
+
+                            if (Response.IsSuccessStatusCode)
+                            {
+                                Result = JToken.Parse(jsonResponse);
+                                Request.PrintSuccessLog(Body, Result);
+
+                                return Result;
+                            }
+
+                            var code = (int)Response.StatusCode;
+
+                            if ((int)Response.StatusCode >= 500 || Response.StatusCode == (HttpStatusCode)429)
+                            {
+                                // Retry for server errors (5xx) and rate limiting (429)
+                                throw new Exception(
+                                    $"Server error: ({code}) {Response.StatusCode} - {Response.ReasonPhrase}");
+                            }
+
+                            // Throw an exception for other HTTP errors (4xx)
+                            throw new Exception(
+                                $"HTTP error: ({code}) {Response.StatusCode} - {Response.ReasonPhrase}");
                         }
-                        
-                        var code = (int)Response.StatusCode;
-
-                        if ((int)Response.StatusCode >= 500 || Response.StatusCode == (HttpStatusCode)429)
+                        catch (HttpRequestException ex)
                         {
-                            // Retry for server errors (5xx) and rate limiting (429)
-                            throw new Exception($"Server error: ({code}) {Response.StatusCode} - {Response.ReasonPhrase}");
+                            await HandleRetry(attempt, ex);
                         }
+                        catch (TaskCanceledException ex)
+                        {
+                            // Check if the cancellation was user-initiated
+                            if (LinkedToken.IsCancellationRequested)
+                                throw new OperationCanceledException("The request was canceled by the user.", ex,
+                                    LinkedToken);
 
-                        // Throw an exception for other HTTP errors (4xx)
-                        throw new Exception($"HTTP error: ({code}) {Response.StatusCode} - {Response.ReasonPhrase}");
+                            await HandleRetry(attempt, ex);
+                        }
+                        catch (Exception ex)
+                        {
+                            // For non-retryable errors, rethrow immediately
+                            if (Settings.LoggingLevel.IsAcceptedLevel())
+                                Debug.LogError($"Request failed: {ex.Message}\n" +
+                                               $"Exception:\n" +
+                                               $"{ex}");
+                            throw new Exception($"Request failed: {ex.Message}", ex);
+                        }
                     }
-                    catch (HttpRequestException ex)
-                    {
-                        await HandleRetry(attempt, ex);
-                    }
-                    catch (TaskCanceledException ex)
-                    {
-                        // Check if the cancellation was user-initiated
-                        if (LinkedToken.IsCancellationRequested)
-                            throw new OperationCanceledException("The request was canceled by the user.", ex, LinkedToken);
 
-                        await HandleRetry(attempt, ex);
-                    }
-                    catch (Exception ex)
-                    {
-                        // For non-retryable errors, rethrow immediately
-                        if (Settings.LoggingLevel.IsAcceptedLevel())
-                            Debug.LogError($"Request failed: {ex.Message}\n" +
-                                           $"Exception:\n" +
-                                           $"{ex}");
-                        throw new Exception($"Request failed: {ex.Message}", ex);
-                    }
-                }
-
-                // Handle connection-related errors
-                if (Settings.LoggingLevel.IsAcceptedLevel())
-                    Debug.LogError($"Max retries reached. Request failed due to a connection error.");
-                throw new Exception("Max retries reached. Request failed due to a connection error.");
-            }, LinkedToken);
+                    // Handle connection-related errors
+                    if (Settings.LoggingLevel.IsAcceptedLevel())
+                        Debug.LogError($"Max retries reached. Request failed due to a connection error.");
+                    throw new Exception("Max retries reached. Request failed due to a connection error.");
+                },
+                LinkedToken
+            );
         }
 
         private async Task HandleRetry(int attempt, Exception exception)

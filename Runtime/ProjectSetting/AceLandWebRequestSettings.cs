@@ -2,7 +2,6 @@ using System;
 using AceLand.Library.BuildLeveling;
 using AceLand.Library.ProjectSetting;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 namespace AceLand.WebRequest.ProjectSetting
 {
@@ -14,6 +13,7 @@ namespace AceLand.WebRequest.ProjectSetting
         [SerializeField] private bool forceHttpsScheme = true;
         [SerializeField] private bool addTimeInHeader = true;
         [SerializeField] private string timeKey = "Time";
+        [SerializeField] private HeaderData[] autoFillHeaders = { new HeaderData("User-Agent", "Mozilla/5.0") };
         [SerializeField, Min(0)] private int requestTimeout = 3000;
         [SerializeField, Min(0)] private int longRequestTimeout = 15000;
         [SerializeField] private int requestRetry = 3;
@@ -34,6 +34,7 @@ namespace AceLand.WebRequest.ProjectSetting
         public bool ForceHttpsScheme => forceHttpsScheme;
         public bool AddTimeInHeader => addTimeInHeader;
         public string TimeKey => timeKey;
+        public ReadOnlySpan<HeaderData> AutoFillHeaders => autoFillHeaders;
         public int RequestTimeout => requestTimeout;
         public int LongRequestTimeout => longRequestTimeout;
         public int RequestRetry => requestRetry;

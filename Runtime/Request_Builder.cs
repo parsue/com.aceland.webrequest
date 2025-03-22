@@ -9,6 +9,7 @@ namespace AceLand.WebRequest
         public interface IRequestBuilder
         {
             IRequestHandle Build();
+            IRequestBuilder WithHeader(string key, string value);
             IRequestBuilder WithLongRequest(); 
             IRequestBuilder WithTimeout(int ms); 
         }
@@ -17,13 +18,8 @@ namespace AceLand.WebRequest
         {
             IRequestBuilder WithUrl(Uri url);
         }
-        
-        public interface IHeaderBuilder : IRequestBuilder
-        {
-            IRequestBuilder WithHeader(string key, string value);
-        }
 
-        private class RequestHandleBuilder : IUrlBuilder, IHeaderBuilder
+        private class RequestHandleBuilder : IUrlBuilder, IRequestBuilder
         {
             internal RequestHandleBuilder(RequestMethod requestMethod)
             {
@@ -64,8 +60,24 @@ namespace AceLand.WebRequest
 
             public IRequestBuilder WithHeader(string key, string value)
             {
-                _body.Header.Add(new FormData(key, value));
+                AddHeader(key, value);
                 return this;
+            }
+
+            private void AddHeader(string key, string value)
+            {
+                if (string.IsNullOrEmpty(key) || string.IsNullOrEmpty(value)) return;
+                
+                var index = -1;
+                for (var i = 0; i < _body.Header.Count; i++)
+                {
+                    var header = _body.Header[i];
+                    if (header.Key != key) continue;
+                    index = i;
+                    break;
+                }
+                if (index != -1) _body.Header.RemoveAt(index);
+                _body.Header.Add(new FormData(key, value));
             }
         }
     }
