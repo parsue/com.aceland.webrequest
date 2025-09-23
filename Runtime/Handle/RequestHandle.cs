@@ -9,6 +9,7 @@ using AceLand.TaskUtils;
 using AceLand.WebRequest.Core;
 using AceLand.WebRequest.ProjectSetting;
 using Newtonsoft.Json.Linq;
+using Unity.Plastic.Newtonsoft.Json;
 using UnityEngine;
 
 namespace AceLand.WebRequest.Handle
@@ -107,16 +108,30 @@ namespace AceLand.WebRequest.Handle
                             if ((int)Response.StatusCode >= 500 || Response.StatusCode == (HttpStatusCode)429)
                             {
                                 // Retry for server errors (5xx) and rate limiting (429)
-                                throw new Exception(
+                                throw new HttpRequestException(
                                     $"Server error: ({code}) {Response.StatusCode} - {Response.ReasonPhrase}");
                             }
 
                             // Throw an exception for other HTTP errors (4xx)
-                            throw new Exception(
+                            throw new HttpRequestException(
                                 $"HTTP error: ({code}) {Response.StatusCode} - {Response.ReasonPhrase}");
+                        }
+                        catch (JsonReaderException ex)
+                        {
+                            Debug.LogError($"Json Parse Fail: {ex.Message}\n" +
+                                           $"Exception:\n" +
+                                           $"{ex}");
+                            throw;
                         }
                         catch (HttpRequestException ex)
                         {
+                            if (ex.InnerException is WebException wex)
+                            {
+                                Debug.LogError($"Request failed: {ex.Message}\n" +
+                                               $"Exception:\n" +
+                                               $"{ex}");
+                                throw wex;
+                            }
                             await HandleRetry(attempt, ex);
                         }
                         catch (TaskCanceledException ex)
@@ -148,7 +163,7 @@ namespace AceLand.WebRequest.Handle
             );
         }
 
-        private async Task HandleRetry(int attempt, Exception exception)
+        private async Task HandleRetry<T>(int attempt, T exception) where T : Exception
         {
             var retryInterval = Settings.GetRetryInterval(attempt);
             
