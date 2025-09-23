@@ -2,6 +2,7 @@ using System.IO;
 using AceLand.Library.CSV;
 using AceLand.Library.Editor.Providers;
 using AceLand.Library.Extensions;
+using AceLand.Library.Models;
 using AceLand.WebRequest.ProjectSetting;
 using UnityEditor;
 using UnityEngine;
@@ -61,7 +62,7 @@ namespace AceLand.WebRequest.Editor.ProjectSettingsProvider
             
             if (apiAsset.text.IsNullOrEmptyOrWhiteSpace()) return;
 
-            CreateSectionFromCvs(apiAsset.text);
+            CreateSectionFromCvs(apiAsset.ReadAsCsvData());
         }
 
         public override void OnGUI(string searchContext)
@@ -425,11 +426,11 @@ namespace AceLand.WebRequest.Editor.ProjectSettingsProvider
             Debug.Log("API Section Data is updated.");
         }
 
-        private void CreateSectionFromCvs(string csv)
+        private void CreateSectionFromCvs(CsvData csv)
         {
             _section.Clear();
             
-            foreach (var line in csv.ReadAsCsv())
+            foreach (var line in csv.Lines)
             {
                 if (line.Length != 3) continue;
 
