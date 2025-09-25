@@ -8,8 +8,8 @@ using AceLand.Library.Disposable;
 using AceLand.TaskUtils;
 using AceLand.WebRequest.Core;
 using AceLand.WebRequest.ProjectSetting;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using Unity.Plastic.Newtonsoft.Json;
 using UnityEngine;
 
 namespace AceLand.WebRequest.Handle
