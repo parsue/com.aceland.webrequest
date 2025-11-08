@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using AceLand.Library.BuildLeveling;
 using AceLand.Library.Disposable;
+using AceLand.Library.Json;
 using AceLand.TaskUtils;
 using AceLand.WebRequest.Core;
 using AceLand.WebRequest.ProjectSetting;
@@ -93,7 +94,10 @@ namespace AceLand.WebRequest.Handle
                                 _ => throw new ArgumentOutOfRangeException()
                             };
 
-                            var jsonResponse = await Response.Content.ReadAsStringAsync();
+                            var response = await Response.Content.ReadAsStringAsync();
+                            var jsonResponse = response.IsValidJson()
+                                ? response
+                                : $"{{\"message\":\"{response}\"}}";
 
                             if (Response.IsSuccessStatusCode)
                             {
