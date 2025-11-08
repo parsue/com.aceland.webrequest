@@ -1,8 +1,5 @@
-using System.IO;
-using AceLand.Library.CSV;
 using AceLand.Library.Editor.Providers;
-using AceLand.Library.Extensions;
-using AceLand.Library.Models;
+using AceLand.WebRequest.Profiles;
 using AceLand.WebRequest.ProjectSetting;
 using UnityEditor;
 using UnityEngine;
@@ -14,28 +11,10 @@ namespace AceLand.WebRequest.Editor.ProjectSettingsProvider
     {
         public const string SETTINGS_NAME = "Project/AceLand Packages/Web Request";
         
-        private const string EDITOR_PATH = "Assets/Editor";
-        private const string ACELAND_FOLDER = "AceLand";
-        private const string API_DATA_ASSET = "api_sections.asset";
         private const int FIXED_PROPERTY_WIDTH = 400;
-        private const int FIXED_SECTION_WIDTH = 80;
-        private const int FIXED_DOMAIN_WIDTH = 220;
-        private const int FIXED_VERSION_WIDTH = 60;
         private const int FIXED_SMALL_BUTTON_WIDTH = 18;
-        private const int FIXED_NORMAL_BUTTON_WIDTH = 80;
         private const int FIXED_KEY_WIDTH = 120;
-        private const int FIXED_VALUE_WIDTH = 200;
-        
-        private string FileFolder => $"{EDITOR_PATH}/{ACELAND_FOLDER}";
-        private string AssetPath => $"{FileFolder}/{API_DATA_ASSET}";
-        private bool FolderExist => Directory.Exists(FileFolder);
-        private bool AssetExist => File.Exists(AssetPath);
-        
-        private ApiSectionData _oriSection = new();
-        private ApiSectionData _section = new();
-        private string _newSection; 
-        private string _newDomain; 
-        private string _newVersion; 
+        private const int EXPENDED_VALUE_WIDTH = 260;
 
         private AceLandWebRequestSettingsProvider(string path, SettingsScope scope = SettingsScope.User)
             : base(path, scope) { }
@@ -44,7 +23,6 @@ namespace AceLand.WebRequest.Editor.ProjectSettingsProvider
         {
             base.OnActivate(searchContext, rootElement);
             Settings = AceLandWebRequestSettings.GetSerializedSettings();
-            InitApiSections();
         }
 
         [SettingsProvider]
@@ -52,16 +30,6 @@ namespace AceLand.WebRequest.Editor.ProjectSettingsProvider
         {
             var provider = new AceLandWebRequestSettingsProvider(SETTINGS_NAME, SettingsScope.Project);
             return provider;
-        }
-
-        private void InitApiSections()
-        {
-            if (!FolderExist || !AssetExist) return;
-
-            var apiAsset = AssetDatabase.LoadAssetAtPath<TextAsset>(AssetPath);
-            if (apiAsset.text.IsNullOrEmptyOrWhiteSpace()) return;
-
-            CreateSectionFromCvs(apiAsset.ReadAsCsvData());
         }
 
         public override void OnGUI(string searchContext)
@@ -72,8 +40,7 @@ namespace AceLand.WebRequest.Editor.ProjectSettingsProvider
                 out var autoFillHeaders,
                 out var requestTimeout, out var longRequestTimeout,
                 out var requestRetry, out var retryInterval,
-                out var apiUrl,
-                out var apiSection, out var apiDomain, out var apiVersion);
+                out var apiSections, out var currentApiSection);
 
             EditorGUI.BeginChangeCheck();
             
@@ -88,13 +55,6 @@ namespace AceLand.WebRequest.Editor.ProjectSettingsProvider
             DrawFixWidthProperty(forceHttpsScheme);
             
             EditorGUILayout.Space(12f);
-            EditorGUILayout.LabelField("Header Auto Fill", EditorStyles.boldLabel);
-            DrawFixWidthProperty(addTimeInHeader);
-            if (addTimeInHeader.boolValue)
-                DrawFixWidthProperty(timeKey);
-            DrawHeadersArrayWithDefaultExpanded(autoFillHeaders);
-            
-            EditorGUILayout.Space(12f);
             EditorGUILayout.LabelField("Request Options (time unit: ms)", EditorStyles.boldLabel);
             DrawFixWidthProperty(requestTimeout);
             DrawFixWidthProperty(longRequestTimeout);
@@ -103,33 +63,19 @@ namespace AceLand.WebRequest.Editor.ProjectSettingsProvider
             DrawArrayWithDefaultExpanded(retryInterval);
             
             EditorGUILayout.Space(12f);
-            EditorGUILayout.LabelField("Current API Section", EditorStyles.boldLabel);
-            EditorGUI.indentLevel++;
-            DrawApiTitle();
-            EditorGUILayout.BeginHorizontal();
-            EditorGUI.BeginDisabledGroup(true);
-            EditorGUILayout.TextField(apiSection.stringValue, GUILayout.Width(FIXED_SECTION_WIDTH));
-            EditorGUILayout.TextField(apiDomain.stringValue, GUILayout.Width(FIXED_DOMAIN_WIDTH));
-            EditorGUILayout.TextField(apiVersion.stringValue, GUILayout.Width(FIXED_VERSION_WIDTH));
-            EditorGUI.EndDisabledGroup();
-            if (GUILayout.Button("-", GUILayout.Width(FIXED_SMALL_BUTTON_WIDTH)))
-                ClearCurrentApiSection(apiSection, apiDomain, apiVersion);
-            EditorGUILayout.EndHorizontal();
-            var api = (apiDomain.stringValue.IsNullOrEmptyOrWhiteSpace() ? "" : $"{apiDomain.stringValue}") +
-                               (apiVersion.stringValue.IsNullOrEmptyOrWhiteSpace() ? "" : $"/{apiVersion.stringValue}");
-            apiUrl.stringValue = api;
-            EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.LabelField("Api Url", GUILayout.Width(64));
-            EditorGUI.BeginDisabledGroup(true);
-            EditorGUILayout.TextField(apiUrl.stringValue, GUILayout.Width(FIXED_PROPERTY_WIDTH - 64 - 14));
-            EditorGUI.EndDisabledGroup();
-            EditorGUILayout.EndHorizontal();
-            EditorGUI.indentLevel--;
+            EditorGUILayout.LabelField("Header Auto Fill", EditorStyles.boldLabel);
+            DrawFixWidthProperty(addTimeInHeader);
+            if (addTimeInHeader.boolValue)
+                DrawFixWidthProperty(timeKey);
+            DrawHeadersArrayWithDefaultExpanded(autoFillHeaders);
             
             EditorGUILayout.Space(12f);
-            EditorGUILayout.LabelField("API Section Editor", EditorStyles.boldLabel);
-            if (!FolderExist || !AssetExist) DrawCreateApiContent();
-            else DrawApiContent(apiSection, apiDomain, apiVersion);
+            EditorGUILayout.LabelField("API Sections Profiles", EditorStyles.boldLabel);
+            DrawApiSectionsProfiles(apiSections, currentApiSection);
+            
+            EditorGUILayout.Space(12f);
+            EditorGUILayout.LabelField("Default API Section", EditorStyles.boldLabel);
+            DrawDefaultApiSections(currentApiSection);
             
             EditorGUILayout.Space(20f);
             
@@ -144,94 +90,6 @@ namespace AceLand.WebRequest.Editor.ProjectSettingsProvider
                 Settings.ApplyModifiedPropertiesWithoutUndo();
             }
         }
-
-        private void ClearCurrentApiSection(SerializedProperty section, SerializedProperty domain, SerializedProperty version)
-        {
-            section.stringValue = string.Empty;
-            domain.stringValue = string.Empty;
-            version.stringValue = string.Empty;
-        }
-
-        private void DrawCreateApiContent()
-        {
-            if (GUILayout.Button("Create API Section File", GUILayout.Width(200)))
-                CreateApiDataFile();
-            
-            EditorGUILayout.LabelField($"** File will be created in {AssetPath}");
-        }
-
-        private void DrawApiContent(SerializedProperty apiSection, SerializedProperty apiDomain, SerializedProperty apiVersion)
-        {
-            EditorGUI.indentLevel++;
-            
-            DrawApiTitle();
-            DrawApiSections(apiSection, apiDomain, apiVersion);
-
-            EditorGUILayout.BeginHorizontal();
-            _newSection = EditorGUILayout.TextField(_newSection, GUILayout.Width(FIXED_SECTION_WIDTH));
-            _newDomain = EditorGUILayout.TextField(_newDomain, GUILayout.Width(FIXED_DOMAIN_WIDTH));
-            _newVersion = EditorGUILayout.TextField(_newVersion, GUILayout.Width(FIXED_VERSION_WIDTH));
-            if (GUILayout.Button("+", GUILayout.Width(FIXED_SMALL_BUTTON_WIDTH)))
-                AddApiSection();
-            EditorGUILayout.EndHorizontal();
-
-            EditorGUILayout.BeginHorizontal();
-            if (GUILayout.Button("Save", GUILayout.Width(FIXED_NORMAL_BUTTON_WIDTH)))
-            {
-                GUI.FocusControl(null);
-                OverwriteTextAsset();
-            }
-            if (GUILayout.Button("Restore", GUILayout.Width(FIXED_NORMAL_BUTTON_WIDTH)))
-            {
-                GUI.FocusControl(null);
-                _section = _oriSection.DeepClone();
-            }
-            EditorGUILayout.EndHorizontal();
-            
-            EditorGUILayout.LabelField($"** File will located in {AssetPath}");
-            EditorGUI.indentLevel--;
-        }
-
-        private void DrawApiTitle()
-        {
-            EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.LabelField("Section", GUILayout.Width(FIXED_SECTION_WIDTH));
-            EditorGUILayout.LabelField("Domain", GUILayout.Width(FIXED_DOMAIN_WIDTH));
-            EditorGUILayout.LabelField("Ver", GUILayout.Width(FIXED_VERSION_WIDTH));
-            EditorGUILayout.EndHorizontal();
-        }
-
-        private void DrawApiSections(SerializedProperty apiSection, SerializedProperty apiDomain, SerializedProperty apiVersion)
-        {
-            foreach (var (section, api) in _section.Get())
-            {
-                EditorGUILayout.BeginHorizontal();
-                EditorGUI.BeginDisabledGroup(true);
-                EditorGUILayout.TextField(section, GUILayout.Width(80));
-                EditorGUI.EndDisabledGroup();
-                api.domain = EditorGUILayout.TextField(api.domain, GUILayout.Width(220));
-                api.version = EditorGUILayout.TextField(api.version, GUILayout.Width(60));
-                if (GUILayout.Button("-", GUILayout.Width(FIXED_SMALL_BUTTON_WIDTH)))
-                {
-                    RemoveApiSection(section);
-                    break;
-                }
-                if (GUILayout.Button("*", GUILayout.Width(FIXED_SMALL_BUTTON_WIDTH)))
-                {
-                    GUI.FocusControl(null);
-                    apiSection.stringValue = VerifyDomainText(section);
-                    apiDomain.stringValue = VerifyDomainText(api.domain);
-                    apiVersion.stringValue = VerifyDomainText(api.version);
-                }
-
-                EditorGUILayout.EndHorizontal();
-            }
-        }
-
-        private void DrawFixWidthProperty(SerializedProperty property)
-        {
-            EditorGUILayout.PropertyField(property, GUILayout.Width(FIXED_PROPERTY_WIDTH));
-        } 
         
         private void SerializedProperty(out SerializedProperty loggingLevel, out SerializedProperty resultLoggingLevel,
             out SerializedProperty checkJsonBeforeSend, out SerializedProperty forceHttpsScheme,
@@ -239,8 +97,7 @@ namespace AceLand.WebRequest.Editor.ProjectSettingsProvider
             out SerializedProperty autoFillHeaders, 
             out SerializedProperty requestTimeout, out SerializedProperty longRequestTimeout,
             out SerializedProperty requestRetry, out SerializedProperty retryInterval,
-            out SerializedProperty apiUrl, 
-            out SerializedProperty apiSection, out SerializedProperty apiDomain, out SerializedProperty apiVersion)
+            out SerializedProperty apiSections, out SerializedProperty currentApiSection)
         {
             loggingLevel = Settings.FindProperty("loggingLevel");
             resultLoggingLevel = Settings.FindProperty("resultLoggingLevel");
@@ -253,11 +110,15 @@ namespace AceLand.WebRequest.Editor.ProjectSettingsProvider
             longRequestTimeout = Settings.FindProperty("longRequestTimeout");
             requestRetry = Settings.FindProperty("requestRetry");
             retryInterval = Settings.FindProperty("retryInterval");
-            apiUrl = Settings.FindProperty("apiUrl");
-            apiSection = Settings.FindProperty("apiSection");
-            apiDomain = Settings.FindProperty("apiDomain");
-            apiVersion = Settings.FindProperty("apiVersion");
+            apiSections = Settings.FindProperty("apiSections");
+            currentApiSection = Settings.FindProperty("currentApiSection");
         }
+
+        private void DrawFixWidthProperty(SerializedProperty property)
+        {
+            if (property == null) return;
+            EditorGUILayout.PropertyField(property, GUILayout.Width(FIXED_PROPERTY_WIDTH));
+        } 
         
         private void DrawHeadersArrayWithDefaultExpanded(SerializedProperty arrayProperty)
         {
@@ -287,7 +148,7 @@ namespace AceLand.WebRequest.Editor.ProjectSettingsProvider
             
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("Key", GUILayout.Width(FIXED_KEY_WIDTH));
-            EditorGUILayout.LabelField("Value", GUILayout.Width(FIXED_VALUE_WIDTH));
+            EditorGUILayout.LabelField("Value", GUILayout.Width(EXPENDED_VALUE_WIDTH));
             EditorGUILayout.EndHorizontal();
             
             for (var i = 0; i < arrayProperty.arraySize; i++)
@@ -300,7 +161,7 @@ namespace AceLand.WebRequest.Editor.ProjectSettingsProvider
                 var value = element.FindPropertyRelative("value");
                 
                 EditorGUILayout.PropertyField(key, GUIContent.none, GUILayout.Width(FIXED_KEY_WIDTH));
-                EditorGUILayout.PropertyField(value, GUIContent.none, GUILayout.Width(FIXED_VALUE_WIDTH));
+                EditorGUILayout.PropertyField(value, GUIContent.none, GUILayout.Width(EXPENDED_VALUE_WIDTH));
 
                 if (GUILayout.Button("-", GUILayout.Width(FIXED_SMALL_BUTTON_WIDTH)))
                 {
@@ -360,100 +221,80 @@ namespace AceLand.WebRequest.Editor.ProjectSettingsProvider
             
             EditorGUI.indentLevel--;
         }
-
-        private void CreateApiDataFile()
+        
+        private void DrawApiSectionsProfiles(SerializedProperty profiles, SerializedProperty currentProfile)
         {
-            if (!AssetDatabase.IsValidFolder(EDITOR_PATH))
-                AssetDatabase.CreateFolder("Assets", "Editor");
-            if (!AssetDatabase.IsValidFolder(FileFolder))
-                AssetDatabase.CreateFolder(EDITOR_PATH, ACELAND_FOLDER);
-
-            AssetDatabase.CreateAsset(new TextAsset(string.Empty), AssetPath);
-            Debug.Log($"API Section File is created : {AssetPath}");
-        }
-
-        private void AddApiSection()
-        {
-            GUI.FocusControl(null);
+            if (!profiles.isArray) return;
             
-            if (_newSection.IsNullOrEmptyOrWhiteSpace())
+            EditorGUILayout.BeginHorizontal();
+            
+            var fieldLabel = $"{profiles.displayName} ({profiles.arraySize})";
+            EditorGUILayout.LabelField(fieldLabel, GUILayout.Width(160));
+            
+            if (GUILayout.Button("+", GUILayout.Width(FIXED_SMALL_BUTTON_WIDTH)))
             {
-                Debug.LogWarning("Section cannot be empty");
-                return;
+                GUI.FocusControl(null);
+                profiles.InsertArrayElementAtIndex(profiles.arraySize);
             }
-            if (_newDomain.IsNullOrEmptyOrWhiteSpace())
+            if (GUILayout.Button("-", GUILayout.Width(FIXED_SMALL_BUTTON_WIDTH)))
             {
-                Debug.LogWarning("Domain cannot be empty");
-                return;
+                GUI.FocusControl(null);
+                profiles.DeleteArrayElementAtIndex(profiles.arraySize - 1);
             }
             
-            _newSection = VerifyDomainText(_newSection);
-            _newDomain = VerifyDomainText(_newDomain);
-            _newVersion = VerifyDomainText(_newVersion);
+            EditorGUILayout.EndHorizontal();
+
+            EditorGUI.indentLevel++;
             
-            _section.AddSection(_newSection, _newDomain, _newVersion);
-            _newSection = string.Empty;
-            _newDomain = string.Empty;
-            _newVersion = string.Empty;
-        }
-
-        private void RemoveApiSection(string section)
-        {
-            GUI.FocusControl(null);
-            if (section.IsNullOrEmptyOrWhiteSpace()) return;
-            
-            _section.RemoveSection(section);
-        }
-
-        private string VerifyDomainText(string text)
-        {
-            if (string.IsNullOrEmpty(text)) return string.Empty;
-            
-            text = text.Replace(" ", "");
-            text = text.Replace('\\', '/');
-            text = text.Trim(':');
-            text = text.Trim('/');
-
-            return text;
-        }
-
-        private void OverwriteTextAsset()
-        {
-            _oriSection = _section.DeepClone();
-            var csv = CreateCvsFromData(_section);
-            AssetDatabase.CreateAsset(new TextAsset(csv), AssetPath);
-            Debug.Log("API Section Data is updated.");
-        }
-
-        private void CreateSectionFromCvs(CsvData csv)
-        {
-            _section.Clear();
-            
-            foreach (var line in csv.Lines)
+            for (var i = 0; i < profiles.arraySize; i++)
             {
-                if (line.Length != 3) continue;
+                var element = profiles.GetArrayElementAtIndex(i);
 
-                var section = line[0];
-                var domain = line[1];
-                var version = line[2];
+                EditorGUILayout.BeginHorizontal();
                 
-                _section.AddSection(section, domain, version);
-            }
+                EditorGUILayout.PropertyField(element, GUIContent.none, GUILayout.Width(360));
 
-            _oriSection = _section.DeepClone();
+                if (GUILayout.Button("-", GUILayout.Width(FIXED_SMALL_BUTTON_WIDTH)))
+                {
+                    GUI.FocusControl(null);
+                    profiles.DeleteArrayElementAtIndex(i);
+                    break;
+                }
+                
+                if (GUILayout.Button("*", GUILayout.Width(FIXED_SMALL_BUTTON_WIDTH)))
+                {
+                    GUI.FocusControl(null);
+                    currentProfile.boxedValue = element.boxedValue;
+                }
+
+                EditorGUILayout.EndHorizontal();
+            }
+            
+            EditorGUI.indentLevel--;
         }
 
-        private string CreateCvsFromData(ApiSectionData data)
+        private void DrawDefaultApiSections(SerializedProperty currentApiSection)
         {
-            var csv = string.Empty;
-            foreach (var (section, api) in data.Get())
+            EditorGUI.indentLevel++;
+            EditorGUI.BeginDisabledGroup(true);
+            if (currentApiSection.boxedValue != null)
             {
-                if (!csv.IsNullOrEmptyOrWhiteSpace())
-                    csv += "\n";
-                csv += $"\"{VerifyDomainText(section)}\",\"{VerifyDomainText(api.domain)}\",\"{VerifyDomainText(api.version)}\"";
+                var profile = currentApiSection.objectReferenceValue as ApiSectionsProfile;
+                var profileSo = new SerializedObject(profile);
+                var apiSection = profileSo.FindProperty("sectionName");
+                var apiUrl = profileSo.FindProperty("apiUrl");
+                DrawFixWidthProperty(apiSection);
+                DrawFixWidthProperty(apiUrl);
+                EditorGUI.EndDisabledGroup();
+                if (GUILayout.Button("Clear Current Section", GUILayout.Width(200)))
+                    currentApiSection.objectReferenceValue = null;
             }
-
-            return csv;
+            else
+            {
+                EditorGUILayout.LabelField("Current Not Set", EditorStyles.boldLabel);
+                EditorGUI.EndDisabledGroup();
+            }
+            EditorGUI.indentLevel--;
         }
     }
 }

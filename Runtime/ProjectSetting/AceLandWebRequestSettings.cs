@@ -1,7 +1,10 @@
 using System;
+using System.Collections.Generic;
 using AceLand.Library.BuildLeveling;
 using AceLand.Library.ProjectSetting;
+using AceLand.WebRequest.Profiles;
 using UnityEngine;
+using ZLinq;
 
 namespace AceLand.WebRequest.ProjectSetting
 {
@@ -13,28 +16,45 @@ namespace AceLand.WebRequest.ProjectSetting
         [SerializeField] private bool forceHttpsScheme = true;
         [SerializeField] private bool addTimeInHeader = true;
         [SerializeField] private string timeKey = "Time";
-        [SerializeField] private HeaderData[] autoFillHeaders = { new HeaderData("User-Agent", "Mozilla/5.0") };
+        [SerializeField] private List<HeaderData> autoFillHeaders = new()
+        {
+            new HeaderData("User-Agent", "Mozilla/5.0"),
+        };
         [SerializeField, Min(0)] private int requestTimeout = 3000;
         [SerializeField, Min(0)] private int longRequestTimeout = 15000;
         [SerializeField] private int requestRetry = 3;
         [SerializeField] private int[] retryInterval = { 400, 800, 1600, 3200, 6400, 12800, 25600 };
 
-        [SerializeField] private string apiUrl;
-        [SerializeField] private string apiSection;
-        [SerializeField] private string apiDomain;
-        [SerializeField] private string apiVersion;
+        [SerializeField] private ApiSectionsProfile[] apiSections = Array.Empty<ApiSectionsProfile>();
 
-        public string ApiUrl => apiUrl;
-        public string ApiSection => apiSection;
-        public string ApiDomain => apiDomain;
-        public string ApiVersion => apiVersion;
+        [SerializeField] private ApiSectionsProfile currentApiSection;
+
+        public string ApiUrl => currentApiSection.ApiUrl;
+        public string CurrentSection => currentApiSection.SectionName;
+        public IEnumerable<HeaderData> DefaultHeaders()
+        {
+            if (currentApiSection == null) return autoFillHeaders;
+            var list = autoFillHeaders;
+            list.AddRange(currentApiSection.Headers);
+            return list;
+        }
+        public IEnumerable<HeaderData> SectionHeaders(string sectionName)
+        {
+            var section = apiSections.AsValueEnumerable()
+                .FirstOrDefault(s => s.SectionName == sectionName);
+            if (section == null) return autoFillHeaders;
+            var list = autoFillHeaders;
+            list.AddRange(section.Headers);
+            return list;
+        }
+        
         public BuildLevel LoggingLevel => loggingLevel;
         public BuildLevel ResultLoggingLevel => resultLoggingLevel;
         public bool CheckJsonBeforeSend => checkJsonBeforeSend;
         public bool ForceHttpsScheme => forceHttpsScheme;
         public bool AddTimeInHeader => addTimeInHeader;
         public string TimeKey => timeKey;
-        public ReadOnlySpan<HeaderData> AutoFillHeaders => autoFillHeaders;
+
         public int RequestTimeout => requestTimeout;
         public int LongRequestTimeout => longRequestTimeout;
         public int RequestRetry => requestRetry;

@@ -25,7 +25,7 @@ namespace AceLand.WebRequest
             internal RequestHandleBuilder(RequestMethod requestMethod)
             {
                 _body.RequestMethod = requestMethod;
-                _body.Header.AddRange(AutoFillHeader());
+                _body.Header.AddRange(GetHeader());
             }
 
             private readonly JsonBody _body = new();

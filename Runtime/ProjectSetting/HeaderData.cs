@@ -1,4 +1,5 @@
 ﻿using System;
+using AceLand.Library.Extensions;
 using UnityEngine;
 
 namespace AceLand.WebRequest.ProjectSetting
@@ -15,7 +16,7 @@ namespace AceLand.WebRequest.ProjectSetting
         [SerializeField] private string key;
         [SerializeField] private string value;
         
-        public bool IsEmpty => string.IsNullOrEmpty(key) || string.IsNullOrEmpty(value);
+        public bool IsEmpty => key.IsNullOrEmptyOrWhiteSpace() || value.IsNullOrEmptyOrWhiteSpace();
         public string Key => key;
         public string Value => value;
     }

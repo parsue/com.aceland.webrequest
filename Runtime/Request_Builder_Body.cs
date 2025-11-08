@@ -47,7 +47,7 @@ namespace AceLand.WebRequest
             internal RequestBodyHandleBuilder(RequestMethod requestMethod)
             {
                 _requestMethod = requestMethod;
-                _headers.AddRange(AutoFillHeader());
+                _headers.AddRange(GetHeader());
             }
 
             private readonly RequestMethod _requestMethod;

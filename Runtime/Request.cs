@@ -1,10 +1,12 @@
 using System;
 using System.Collections.Generic;
 using AceLand.Library.BuildLeveling;
+using AceLand.Library.Extensions;
 using AceLand.WebRequest.Core;
 using AceLand.WebRequest.ProjectSetting;
 using Newtonsoft.Json.Linq;
 using UnityEngine;
+using ZLinq;
 
 namespace AceLand.WebRequest
 {
@@ -78,7 +80,7 @@ namespace AceLand.WebRequest
             Debug.Log(msg);
         }
 
-        private static List<FormData> AutoFillHeader()
+        private static List<FormData> GetHeader(string sectionName = null)
         {
             var headers = new List<FormData>();
             
@@ -87,12 +89,13 @@ namespace AceLand.WebRequest
                 var time = $"{(DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10000}";
                 headers.Add(new FormData(Settings.TimeKey, time));
             }
-
-            foreach (var header in Settings.AutoFillHeaders)
-            {
-                if (header.IsEmpty) continue;
+            
+            var headerList = sectionName.IsNullOrEmptyOrWhiteSpace()
+                ? Settings.DefaultHeaders()
+                : Settings.SectionHeaders(sectionName);
+            
+            foreach (var header in headerList.AsValueEnumerable().Where(h => !h.IsEmpty))
                 headers.Add(new FormData(header.Key, header.Value));
-            }
 
             return headers;
         }
