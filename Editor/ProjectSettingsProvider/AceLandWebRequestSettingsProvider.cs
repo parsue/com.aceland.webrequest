@@ -40,7 +40,7 @@ namespace AceLand.WebRequest.Editor.ProjectSettingsProvider
                 out var autoFillHeaders,
                 out var requestTimeout, out var longRequestTimeout,
                 out var requestRetry, out var retryInterval,
-                out var apiSections, out var currentApiSection);
+                out var apiSections, out var defaultApiSection);
 
             EditorGUI.BeginChangeCheck();
             
@@ -71,11 +71,11 @@ namespace AceLand.WebRequest.Editor.ProjectSettingsProvider
             
             EditorGUILayout.Space(12f);
             EditorGUILayout.LabelField("API Sections Profiles", EditorStyles.boldLabel);
-            DrawApiSectionsProfiles(apiSections, currentApiSection);
+            DrawApiSectionsProfiles(apiSections, defaultApiSection);
             
             EditorGUILayout.Space(12f);
             EditorGUILayout.LabelField("Default API Section", EditorStyles.boldLabel);
-            DrawDefaultApiSections(currentApiSection);
+            DrawDefaultApiSections(defaultApiSection);
             
             EditorGUILayout.Space(20f);
             
@@ -97,7 +97,7 @@ namespace AceLand.WebRequest.Editor.ProjectSettingsProvider
             out SerializedProperty autoFillHeaders, 
             out SerializedProperty requestTimeout, out SerializedProperty longRequestTimeout,
             out SerializedProperty requestRetry, out SerializedProperty retryInterval,
-            out SerializedProperty apiSections, out SerializedProperty currentApiSection)
+            out SerializedProperty apiSections, out SerializedProperty defaultApiSection)
         {
             loggingLevel = Settings.FindProperty("loggingLevel");
             resultLoggingLevel = Settings.FindProperty("resultLoggingLevel");
@@ -111,7 +111,7 @@ namespace AceLand.WebRequest.Editor.ProjectSettingsProvider
             requestRetry = Settings.FindProperty("requestRetry");
             retryInterval = Settings.FindProperty("retryInterval");
             apiSections = Settings.FindProperty("apiSections");
-            currentApiSection = Settings.FindProperty("currentApiSection");
+            defaultApiSection = Settings.FindProperty("defaultApiSection");
         }
 
         private void DrawFixWidthProperty(SerializedProperty property)
@@ -222,7 +222,7 @@ namespace AceLand.WebRequest.Editor.ProjectSettingsProvider
             EditorGUI.indentLevel--;
         }
         
-        private void DrawApiSectionsProfiles(SerializedProperty profiles, SerializedProperty currentProfile)
+        private void DrawApiSectionsProfiles(SerializedProperty profiles, SerializedProperty defaultProfile)
         {
             if (!profiles.isArray) return;
             
@@ -264,7 +264,7 @@ namespace AceLand.WebRequest.Editor.ProjectSettingsProvider
                 if (GUILayout.Button("*", GUILayout.Width(FIXED_SMALL_BUTTON_WIDTH)))
                 {
                     GUI.FocusControl(null);
-                    currentProfile.boxedValue = element.boxedValue;
+                    defaultProfile.boxedValue = element.boxedValue;
                 }
 
                 EditorGUILayout.EndHorizontal();

@@ -27,15 +27,22 @@ namespace AceLand.WebRequest.ProjectSetting
 
         [SerializeField] private ApiSectionsProfile[] apiSections = Array.Empty<ApiSectionsProfile>();
 
-        [SerializeField] private ApiSectionsProfile currentApiSection;
+        [SerializeField] private ApiSectionsProfile defaultApiSection;
 
-        public string ApiUrl => currentApiSection.ApiUrl;
-        public string CurrentSection => currentApiSection.SectionName;
+        public string DefaultSection => defaultApiSection.SectionName;
+        public string DefaultApiUrl => defaultApiSection.ApiUrl;
+
+        public string SectionApiUrl(string sectionName)
+        {
+            var section = apiSections.AsValueEnumerable()
+                .FirstOrDefault(s => s.SectionName == sectionName);
+            return section == null ? string.Empty : section.ApiUrl;
+        }
         public IEnumerable<HeaderData> DefaultHeaders()
         {
-            if (currentApiSection == null) return autoFillHeaders;
+            if (defaultApiSection == null) return autoFillHeaders;
             var list = autoFillHeaders;
-            list.AddRange(currentApiSection.Headers);
+            list.AddRange(defaultApiSection.Headers);
             return list;
         }
         public IEnumerable<HeaderData> SectionHeaders(string sectionName)
