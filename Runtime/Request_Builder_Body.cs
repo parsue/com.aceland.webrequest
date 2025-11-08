@@ -3,8 +3,11 @@ using System.Collections.Generic;
 using System.IO;
 using AceLand.Library.Extensions;
 using AceLand.Library.Json;
+using AceLand.Library.Models;
 using AceLand.WebRequest.Core;
 using AceLand.WebRequest.Handle;
+using Newtonsoft.Json.Linq;
+using UnityEngine;
 using ZLinq;
 
 namespace AceLand.WebRequest
@@ -18,14 +21,15 @@ namespace AceLand.WebRequest
 
         public interface IContentTypeBuilder
         {
-            IRequestJsonBodyBuilder WithJsonContent();
-            IRequestFormBodyBuilder WithFormContent();
-            IRequestMultipartBodyBuilder WithMultipartContent();
+            IRequestJsonBodyBuilder WithJsonBody();
+            IRequestFormBodyBuilder WithFormBody();
+            IRequestMultipartBodyBuilder WithMultipartBody();
         }
         
         public interface IRequestJsonBodyBuilder : IRequestBuilder
         {
             IRequestJsonBodyBuilder WithContent(string json);
+            IRequestJsonBodyBuilder WithContent(string key, string value);
         }
 
         public interface IRequestFormBodyBuilder : IRequestBuilder
@@ -93,19 +97,19 @@ namespace AceLand.WebRequest
                 return this;
             }
 
-            public IRequestJsonBodyBuilder WithJsonContent()
+            public IRequestJsonBodyBuilder WithJsonBody()
             {
                 _dataType = DataType.Json;
                 return this;
             }
 
-            public IRequestFormBodyBuilder WithFormContent()
+            public IRequestFormBodyBuilder WithFormBody()
             {
                 _dataType = DataType.Form;
                 return this;
             }
 
-            public IRequestMultipartBodyBuilder WithMultipartContent()
+            public IRequestMultipartBodyBuilder WithMultipartBody()
             {
                 _dataType = DataType.Multipart;
                 return this;
@@ -143,10 +147,29 @@ namespace AceLand.WebRequest
 
             IRequestJsonBodyBuilder IRequestJsonBodyBuilder.WithContent(string json)
             {
-                if (Settings.CheckJsonBeforeSend && !json.IsNullOrEmptyOrWhiteSpace() && !json.IsValidJson())
+                if (json.IsNullOrEmptyOrWhiteSpace()) return this;
+                if (Settings.CheckJsonBeforeSend && !json.IsValidJson())
                     throw new Exception("json format is not correct");
                 
                 _jsonBody = json;
+                return this;
+            }
+
+            IRequestJsonBodyBuilder IRequestJsonBodyBuilder.WithContent(string key, string value)
+            {
+                if (key.IsNullOrEmptyOrWhiteSpace() || value.IsNullOrEmptyOrWhiteSpace())
+                    return this;
+
+                if (_jsonBody.IsNullOrEmptyOrWhiteSpace())
+                {
+                    _jsonBody = $"{{\"{key}\":\"{value}\"}}";
+                    return this;
+                }
+
+                var jsonData = JsonData.Builder().WithText(_jsonBody).Build();
+                var items = jsonData.Container.ToObject<Dictionary<string, object>>();
+                items[key] = value;
+                _jsonBody = items.ToJson().Text;
                 return this;
             }
 

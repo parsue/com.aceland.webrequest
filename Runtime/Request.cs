@@ -25,9 +25,6 @@ namespace AceLand.WebRequest
 
         public static IUrlBuilder Get() =>
             new RequestHandleBuilder(RequestMethod.Get);
-        
-        public static IUrlBuilder Delete() =>
-            new RequestHandleBuilder(RequestMethod.Delete);
 
         public static IUrlBodyBuilder Post() =>
             new RequestBodyHandleBuilder(RequestMethod.Post);
@@ -37,6 +34,9 @@ namespace AceLand.WebRequest
 
         public static IUrlBodyBuilder Patch() =>
             new RequestBodyHandleBuilder(RequestMethod.Patch);
+        
+        public static IUrlBodyBuilder Delete() =>
+            new RequestBodyHandleBuilder(RequestMethod.Delete);
         
         internal static void PrintRequestLog(IRequestBody body)
         {

@@ -105,7 +105,8 @@ namespace AceLand.WebRequest.Handle
 
                             var code = (int)Response.StatusCode;
 
-                            if ((int)Response.StatusCode >= 500 || Response.StatusCode == (HttpStatusCode)429)
+                            if ((int)Response.StatusCode >= 500 ||
+                                Response.StatusCode == (HttpStatusCode)429)
                             {
                                 // Retry for server errors (5xx) and rate limiting (429)
                                 throw new HttpRequestException(
@@ -119,20 +120,14 @@ namespace AceLand.WebRequest.Handle
                         catch (JsonReaderException ex)
                         {
                             Debug.LogError($"Json Parse Fail: {ex.Message}\n" +
-                                           $"Exception:\n" +
-                                           $"{ex}");
+                                           $"Exception: {ex}");
                             throw;
                         }
                         catch (HttpRequestException ex)
                         {
-                            if (ex.InnerException is WebException wex)
-                            {
-                                Debug.LogError($"Request failed: {ex.Message}\n" +
-                                               $"Exception:\n" +
-                                               $"{ex}");
-                                throw wex;
-                            }
-                            await HandleRetry(attempt, ex);
+                            Debug.LogError($"Request failed: {ex.Message}\n" +
+                                           $"Exception: {ex}");
+                            throw;
                         }
                         catch (TaskCanceledException ex)
                         {
@@ -148,8 +143,7 @@ namespace AceLand.WebRequest.Handle
                             // For non-retryable errors, rethrow immediately
                             if (Settings.LoggingLevel.IsAcceptedLevel())
                                 Debug.LogError($"Request failed: {ex.Message}\n" +
-                                               $"Exception:\n" +
-                                               $"{ex}");
+                                               $"Exception: {ex}");
                             throw new Exception($"Request failed: {ex.Message}", ex);
                         }
                     }
