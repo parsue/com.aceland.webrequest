@@ -41,7 +41,7 @@ namespace AceLand.WebRequest.ProjectSetting
         public IEnumerable<HeaderData> DefaultHeaders()
         {
             if (defaultApiSection == null) return autoFillHeaders;
-            var list = autoFillHeaders;
+            var list = new List<HeaderData>(autoFillHeaders);
             list.AddRange(defaultApiSection.Headers);
             return list;
         }
