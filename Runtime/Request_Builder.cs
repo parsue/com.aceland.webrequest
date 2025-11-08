@@ -10,6 +10,7 @@ namespace AceLand.WebRequest
         {
             IRequestHandle Build();
             IRequestBuilder WithHeader(string key, string value);
+            IRequestBuilder WithParam(string key, string value);
             IRequestBuilder WithLongRequest(); 
             IRequestBuilder WithTimeout(int ms); 
         }
@@ -78,6 +79,28 @@ namespace AceLand.WebRequest
                 }
                 if (index != -1) _body.Header.RemoveAt(index);
                 _body.Header.Add(new FormData(key, value));
+            }
+
+            public IRequestBuilder WithParam(string key, string value)
+            {
+                AddParameter(key, value);
+                return this;
+            }
+
+            private void AddParameter(string key, string value)
+            {
+                if (string.IsNullOrEmpty(key) || string.IsNullOrEmpty(value)) return;
+                
+                var index = -1;
+                for (var i = 0; i < _body.Parameters.Count; i++)
+                {
+                    var header = _body.Parameters[i];
+                    if (header.Key != key) continue;
+                    index = i;
+                    break;
+                }
+                if (index != -1) _body.Parameters.RemoveAt(index);
+                _body.Parameters.Add(new FormData(key, value));
             }
         }
     }

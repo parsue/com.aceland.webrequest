@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using AceLand.Library.Disposable;
+using ZLinq;
 
 namespace AceLand.WebRequest.Core
 {
@@ -18,10 +20,33 @@ namespace AceLand.WebRequest.Core
         
         public RequestMethod RequestMethod { get; internal set; }
         public DataType DataType => DataType.Json;
-        public Uri Url { get; internal set; }
+
+        public Uri Url
+        {
+            get
+            {
+                if (Parameters.Count == 0) return url.ToUri();
+                var uri = Parameters.AsValueEnumerable()
+                    .Aggregate(
+                        $"{url}?",
+                        (current, param) => current + $"{param.Key}={param.Value}&")
+                    .TrimEnd('&')
+                    .ToUri();
+                return uri;
+            }
+            
+            internal set
+            {
+                url = value.ToString();
+            }
+        }
+
         public float Timeout { get; internal set; } = -1;
-        
+
         public readonly List<FormData> Header = new();
+        public readonly List<FormData> Parameters = new();
+
+        private string url;
 
         public string HeaderText()
         {

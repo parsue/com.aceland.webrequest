@@ -5,6 +5,7 @@ using AceLand.Library.Extensions;
 using AceLand.Library.Json;
 using AceLand.WebRequest.Core;
 using AceLand.WebRequest.Handle;
+using ZLinq;
 
 namespace AceLand.WebRequest
 {
@@ -24,19 +25,16 @@ namespace AceLand.WebRequest
         
         public interface IRequestJsonBodyBuilder : IRequestBuilder
         {
-            new IRequestJsonBodyBuilder WithHeader(string key, string value);
             IRequestJsonBodyBuilder WithContent(string json);
         }
 
         public interface IRequestFormBodyBuilder : IRequestBuilder
         {
-            new IRequestFormBodyBuilder WithHeader(string key, string value);
             IRequestFormBodyBuilder WithContent(string key, string value);
         }
 
         public interface IRequestMultipartBodyBuilder : IRequestBuilder
         {
-            new IRequestMultipartBodyBuilder WithHeader(string key, string value);
             IRequestMultipartBodyBuilder WithContent(string key, string value);
             IRequestMultipartBodyBuilder WithStreamData(string key, string filePath, string fileName);
             IRequestMultipartBodyBuilder WithStreamData(string key, byte[] data, string fileName);
@@ -58,6 +56,7 @@ namespace AceLand.WebRequest
             private (string key, string token) _token;
             private DataType _dataType;
             private readonly List<FormData> _headers = new();
+            private readonly List<FormData> _parameters = new();
             private string _jsonBody = string.Empty;
             private readonly List<FormData> _bodyData = new();
             private readonly List<StreamData> _streamData = new();
@@ -118,29 +117,27 @@ namespace AceLand.WebRequest
                 return this;
             }
 
-            IRequestJsonBodyBuilder IRequestJsonBodyBuilder.WithHeader(string key, string value)
-            {
-                AddHeader(key, value);
-                return this;
-            }
-
-            IRequestFormBodyBuilder IRequestFormBodyBuilder.WithHeader(string key, string value)
-            {
-                AddHeader(key, value);
-                return this;
-            }
-
-            IRequestMultipartBodyBuilder IRequestMultipartBodyBuilder.WithHeader(string key, string value)
-            {
-                AddHeader(key, value);
-                return this;
-            }
-
             private void AddHeader(string key, string value)
             {
-                foreach (var header in _bodyData)
-                    if (header.Key == key) return;
-                
+                if (_headers.AsValueEnumerable()
+                    .Any(header => header.Key == key))
+                    return;
+
+                _bodyData.Add(new FormData(key, value));
+            }
+
+            public IRequestBuilder WithParam(string key, string value)
+            {
+                AddParameter(key, value);
+                return this;
+            }
+
+            private void AddParameter(string key, string value)
+            {
+                if (_parameters.AsValueEnumerable()
+                    .Any(param => param.Key == key))
+                    return;
+
                 _bodyData.Add(new FormData(key, value));
             }
 
@@ -204,6 +201,7 @@ namespace AceLand.WebRequest
                         jsonBody.Url = _url;
                         jsonBody.Timeout = _timeout;
                         jsonBody.Header.AddRange(_headers);
+                        jsonBody.Parameters.AddRange(_parameters);
                         jsonBody.Body = _jsonBody;
                         return jsonBody;
                     case DataType.Form:
@@ -212,6 +210,7 @@ namespace AceLand.WebRequest
                         formBody.Url = _url;
                         formBody.Timeout = _timeout;
                         formBody.Header.AddRange(_headers);
+                        formBody.Parameters.AddRange(_parameters);
                         formBody.Body.AddRange(_bodyData);
                         return formBody;
                     case DataType.Multipart:
@@ -220,6 +219,7 @@ namespace AceLand.WebRequest
                         multipartBody.Url = _url;
                         multipartBody.Timeout = _timeout;
                         multipartBody.Header.AddRange(_headers);
+                        multipartBody.Parameters.AddRange(_parameters);
                         multipartBody.Body.AddRange(_bodyData);
                         multipartBody.StreamData.AddRange(_streamData);
                         return null;

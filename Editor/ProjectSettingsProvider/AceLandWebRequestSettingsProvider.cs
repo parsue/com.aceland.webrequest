@@ -59,7 +59,6 @@ namespace AceLand.WebRequest.Editor.ProjectSettingsProvider
             if (!FolderExist || !AssetExist) return;
 
             var apiAsset = AssetDatabase.LoadAssetAtPath<TextAsset>(AssetPath);
-            
             if (apiAsset.text.IsNullOrEmptyOrWhiteSpace()) return;
 
             CreateSectionFromCvs(apiAsset.ReadAsCsvData());
@@ -122,7 +121,7 @@ namespace AceLand.WebRequest.Editor.ProjectSettingsProvider
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("Api Url", GUILayout.Width(64));
             EditorGUI.BeginDisabledGroup(true);
-            EditorGUILayout.TextField("https://" + apiUrl.stringValue, GUILayout.Width(FIXED_PROPERTY_WIDTH - 64 - 14));
+            EditorGUILayout.TextField(apiUrl.stringValue, GUILayout.Width(FIXED_PROPERTY_WIDTH - 64 - 14));
             EditorGUI.EndDisabledGroup();
             EditorGUILayout.EndHorizontal();
             EditorGUI.indentLevel--;
@@ -408,10 +407,10 @@ namespace AceLand.WebRequest.Editor.ProjectSettingsProvider
 
         private string VerifyDomainText(string text)
         {
+            if (string.IsNullOrEmpty(text)) return string.Empty;
+            
             text = text.Replace(" ", "");
             text = text.Replace('\\', '/');
-            text = text.Replace("https:", "");
-            text = text.Replace("http:", "");
             text = text.Trim(':');
             text = text.Trim('/');
 
@@ -451,7 +450,7 @@ namespace AceLand.WebRequest.Editor.ProjectSettingsProvider
             {
                 if (!csv.IsNullOrEmptyOrWhiteSpace())
                     csv += "\n";
-                csv += $"{VerifyDomainText(section)},{VerifyDomainText(api.domain)},{VerifyDomainText(api.version)}";
+                csv += $"\"{VerifyDomainText(section)}\",\"{VerifyDomainText(api.domain)}\",\"{VerifyDomainText(api.version)}\"";
             }
 
             return csv;
