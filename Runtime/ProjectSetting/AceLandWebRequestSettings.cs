@@ -36,23 +36,25 @@ namespace AceLand.WebRequest.ProjectSetting
         {
             var section = apiSections.AsValueEnumerable()
                 .FirstOrDefault(s => s.SectionName == sectionName);
+            if (section == null) throw new KeyNotFoundException($"Section {sectionName} does not exist.");
             return section == null ? string.Empty : section.ApiUrl;
         }
         public IEnumerable<HeaderData> DefaultHeaders()
         {
-            if (defaultApiSection == null) return autoFillHeaders;
-            var list = new List<HeaderData>(autoFillHeaders);
-            list.AddRange(defaultApiSection.Headers);
-            return list;
+            foreach (var header in autoFillHeaders)
+                yield return header;
+            foreach (var header in defaultApiSection.Headers)
+                yield return header;
         }
         public IEnumerable<HeaderData> SectionHeaders(string sectionName)
         {
+            foreach (var header in autoFillHeaders)
+                yield return header;
             var section = apiSections.AsValueEnumerable()
                 .FirstOrDefault(s => s.SectionName == sectionName);
-            if (section == null) return autoFillHeaders;
-            var list = autoFillHeaders;
-            list.AddRange(section.Headers);
-            return list;
+            if (section == null) yield break;
+            foreach (var header in section.Headers)
+                yield return header;
         }
         
         public BuildLevel LoggingLevel => loggingLevel;
