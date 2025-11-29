@@ -1,6 +1,7 @@
 using System;
 using AceLand.WebRequest.Core;
 using AceLand.WebRequest.Handle;
+using UnityEngine;
 
 namespace AceLand.WebRequest
 {
@@ -89,7 +90,11 @@ namespace AceLand.WebRequest
 
             private void AddParameter(string key, string value)
             {
-                if (string.IsNullOrEmpty(key) || string.IsNullOrEmpty(value)) return;
+                if (string.IsNullOrEmpty(key) || string.IsNullOrEmpty(value))
+                {
+                    Debug.LogWarning($"Parameter Ignored: key or value is null or empty. Key: {key??"null"}, Value: {value??"null"}");
+                    return;
+                }
                 
                 var index = -1;
                 for (var i = 0; i < _body.Parameters.Count; i++)
