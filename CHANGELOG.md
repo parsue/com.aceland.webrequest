@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+# [2.1.2] - 2025-12-16
+### Added
+- [Request Builder] WithSection(string section)
+- [Request Builder] WithoutSection()
+- [Exceptions] HttpServerErrorException for 500/429
+- [Exceptions] HttpErrorException for other
+### Modified
+- [Request Builder] WithUrl payload changed from Uri to string
+- [Request Builder] WithUrl can set only the part after section url now
+### Removed
+- [Logging] url parameter, header and body for security
+
 ## [2.1.1] - 2025-12-13
 ### Added
 - all meta files
