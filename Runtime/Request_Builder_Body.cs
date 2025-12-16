@@ -14,7 +14,7 @@ namespace AceLand.WebRequest
     {
         public interface IUrlBodyBuilder
         {
-            IContentTypeBuilder WithUrl(Uri url);
+            IContentTypeBuilder WithUrl(string url);
         }
 
         public interface IContentTypeBuilder
@@ -49,11 +49,12 @@ namespace AceLand.WebRequest
             internal RequestBodyHandleBuilder(RequestMethod requestMethod)
             {
                 _requestMethod = requestMethod;
-                _headers.AddRange(GetHeader());
             }
 
             private readonly RequestMethod _requestMethod;
-            private Uri _url;
+            private string _url;
+            private bool _withoutSection;
+            private string _section = string.Empty;
             private float _timeout = -1;
             private (string key, string token) _token;
             private DataType _dataType;
@@ -65,15 +66,31 @@ namespace AceLand.WebRequest
 
             public IRequestHandle Build()
             {
+                if (!_withoutSection)
+                    _section = Settings.DefaultSection;
+
+                Settings.TryGetSection(_section, out var section);
+                if (_withoutSection) section = null;
+                
+                if (section && !_url.StartsWith("http"))
+                    _url = section.ApiUrl + _url;
+
                 if (!CheckUrl(_url))
                     throw new Exception($"Url is not https scheme : {_url}");
-
+                
                 if (_timeout <= 0)
                     _timeout = Settings.RequestTimeout;
                 
                 if (!_token.key.IsNullOrEmptyOrWhiteSpace() && !_token.token.IsNullOrEmptyOrWhiteSpace())
                     _headers.Add(new FormData(_token.key, _token.token));
 
+                var headers = GetHeader(section == null ? null : section.SectionName);
+                foreach (var header in headers)
+                {
+                    if (_headers.AsValueEnumerable().Any(h => h.Key == header.Key)) continue;
+                    _headers.Add(header);
+                }
+                
                 return new RequestHandle(CreateBody());
             }
 
@@ -89,9 +106,26 @@ namespace AceLand.WebRequest
                 return this;
             }
 
-            public IContentTypeBuilder WithUrl(Uri url)
+            public IContentTypeBuilder WithUrl(string url)
             {
                 _url = url;
+                return this;
+            }
+
+            public IRequestBuilder WithSection(string section)
+            {
+                _withoutSection = false;
+                if (!Settings.ContainSection(section))
+                    throw new Exception($"Section {section} is not contained in request builder");
+                
+                _section = section;
+                return this;
+            }
+
+            public IRequestBuilder WithoutSection()
+            {
+                _withoutSection = true;
+                _section = string.Empty;
                 return this;
             }
 
@@ -219,27 +253,27 @@ namespace AceLand.WebRequest
                     case DataType.Json:
                         var jsonBody = new JsonBody();
                         jsonBody.RequestMethod = _requestMethod;
-                        jsonBody.Url = _url;
+                        jsonBody.Uri = _url.ToUri();
                         jsonBody.Timeout = _timeout;
-                        jsonBody.Header.AddRange(_headers);
+                        jsonBody.Headers.AddRange(_headers);
                         jsonBody.Parameters.AddRange(_parameters);
                         jsonBody.Body = _jsonBody;
                         return jsonBody;
                     case DataType.Form:
                         var formBody = new FormBody();
                         formBody.RequestMethod = _requestMethod;
-                        formBody.Url = _url;
+                        formBody.Uri = _url.ToUri();
                         formBody.Timeout = _timeout;
-                        formBody.Header.AddRange(_headers);
+                        formBody.Headers.AddRange(_headers);
                         formBody.Parameters.AddRange(_parameters);
                         formBody.Body.AddRange(_bodyData);
                         return formBody;
                     case DataType.Multipart:
                         var multipartBody = new MultipartBody();
                         multipartBody.RequestMethod = _requestMethod;
-                        multipartBody.Url = _url;
+                        multipartBody.Uri = _url.ToUri();
                         multipartBody.Timeout = _timeout;
-                        multipartBody.Header.AddRange(_headers);
+                        multipartBody.Headers.AddRange(_headers);
                         multipartBody.Parameters.AddRange(_parameters);
                         multipartBody.Body.AddRange(_bodyData);
                         multipartBody.StreamData.AddRange(_streamData);

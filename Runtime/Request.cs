@@ -41,21 +41,13 @@ namespace AceLand.WebRequest
         internal static void PrintRequestLog(IRequestBody body)
         {
             if (!Settings.LoggingLevel.IsAcceptedLevel()) return;
-            
+
             var msg = body.RequestMethod is RequestMethod.Get or RequestMethod.Delete
-                ? $"Send Request: {body.RequestMethod} || {body.Url}\n" +
+                ? $"Send Request: {body.RequestMethod} || {ShortenUrl(body.Uri)}\n" +
+                  $">>> Timeout: {body.Timeout} ms"
+                : $"Send Web Request: {body.RequestMethod} || {body.Uri}\n" +
                   $">>> Timeout: {body.Timeout} ms\n" +
-                  $">>> Header:\n" +
-                  $"{body.HeaderText()}\n" +
-                  $">>> Body:\n" +
-                  $"{body.BodyText()}"
-                : $"Send Web Request: {body.RequestMethod} || {body.Url}\n" +
-                  $">>> Timeout: {body.Timeout} ms\n" +
-                  $">>> Content Format: {body.DataType}\n" +
-                  $">>> Header:\n" +
-                  $"{body.HeaderText()}\n" +
-                  $">>> Body:\n" +
-                  $"{body.BodyText()}";
+                  $">>> Content Format: {body.DataType}";
 
             Debug.Log(msg);
         }
@@ -64,7 +56,7 @@ namespace AceLand.WebRequest
         {
             if (!Settings.LoggingLevel.IsAcceptedLevel()) return;
             
-            var msg = $"Request Success: {body.RequestMethod} || {body.Url}";
+            var msg = $"Request Success: {body.RequestMethod} || {ShortenUrl(body.Uri)}";
             if (Settings.ResultLoggingLevel.IsAcceptedLevel())
                 msg += $"\n{response}";
             Debug.Log(msg);
@@ -74,7 +66,7 @@ namespace AceLand.WebRequest
         {
             if (!Settings.LoggingLevel.IsAcceptedLevel()) return;
             
-            var msg = $"Request Fail: {body.RequestMethod} || {body.Url}";
+            var msg = $"Request Fail: {body.RequestMethod} || {ShortenUrl(body.Uri)}";
             if (Settings.ResultLoggingLevel.IsAcceptedLevel())
                 msg += $"\n{response}";
             Debug.Log(msg);
@@ -100,11 +92,23 @@ namespace AceLand.WebRequest
             return headers;
         }
 
-        private static bool CheckUrl(Uri url)
+        private static bool CheckUrl(string url)
         {
             if (!Settings.ForceHttpsScheme) return true;
-            return url.Scheme == Uri.UriSchemeHttps;
+            var uri = url.ToUri();
+            return uri.Scheme == Uri.UriSchemeHttps;
 
+        }
+
+        private static string ShortenUrl(Uri uri)
+        {
+            var urls = uri.ToString().Split('?');
+            return urls.Length switch
+            {
+                > 1 => urls[0] + "?...",
+                1 => urls[0],
+                _ => string.Empty
+            };
         }
     }
 }

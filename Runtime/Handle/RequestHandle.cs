@@ -8,6 +8,8 @@ using AceLand.Library.Disposable;
 using AceLand.Library.Json;
 using AceLand.TaskUtils;
 using AceLand.WebRequest.Core;
+using AceLand.WebRequest.Exceptions;
+using AceLand.WebRequest.Profiles;
 using AceLand.WebRequest.ProjectSetting;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -49,9 +51,9 @@ namespace AceLand.WebRequest.Handle
         
         public HttpResponseMessage Response { get; private set; }
         public JToken Result { get; private set; }
-        private HttpClient Client { get; set; }
-        private HttpContent Content { get; set; }
-        private IRequestBody Body { get; set; }
+        private HttpClient Client { get; }
+        private HttpContent Content { get; }
+        private IRequestBody Body { get; }
         private CancellationTokenSource TokenSource { get; }
         private CancellationTokenSource LinkedTokenSource { get; set; }
         private CancellationToken LinkedToken => LinkedTokenSource.Token;
@@ -86,11 +88,11 @@ namespace AceLand.WebRequest.Handle
                         {
                             Response = Body.RequestMethod switch
                             {
-                                RequestMethod.Post => await Client.PostAsync(Body.Url, Content, LinkedToken),
-                                RequestMethod.Get => await Client.GetAsync(Body.Url, LinkedToken),
-                                RequestMethod.Put => await Client.PutAsync(Body.Url, Content, LinkedToken),
-                                RequestMethod.Delete => await Client.DeleteAsync(Body.Url, LinkedToken),
-                                RequestMethod.Patch => await Client.PatchAsync(Body.Url, Content, LinkedToken),
+                                RequestMethod.Post => await Client.PostAsync(Body.Uri, Content, LinkedToken),
+                                RequestMethod.Get => await Client.GetAsync(Body.Uri, LinkedToken),
+                                RequestMethod.Put => await Client.PutAsync(Body.Uri, Content, LinkedToken),
+                                RequestMethod.Delete => await Client.DeleteAsync(Body.Uri, LinkedToken),
+                                RequestMethod.Patch => await Client.PatchAsync(Body.Uri, Content, LinkedToken),
                                 _ => throw new ArgumentOutOfRangeException()
                             };
 
@@ -107,19 +109,15 @@ namespace AceLand.WebRequest.Handle
                                 return Result;
                             }
 
-                            var code = (int)Response.StatusCode;
-
                             if ((int)Response.StatusCode >= 500 ||
                                 Response.StatusCode == (HttpStatusCode)429)
                             {
                                 // Retry for server errors (5xx) and rate limiting (429)
-                                throw new HttpRequestException(
-                                    $"Server error: ({code}) {Response.StatusCode} - {Response.ReasonPhrase}");
+                                throw new HttpServerErrorException(Response.StatusCode, response);
                             }
 
                             // Throw an exception for other HTTP errors (4xx)
-                            throw new HttpRequestException(
-                                $"HTTP error: ({code}) {Response.StatusCode} - {Response.ReasonPhrase}");
+                            throw new HttpErrorException(Response.StatusCode, response);
                         }
                         catch (JsonReaderException ex)
                         {

@@ -15,13 +15,13 @@ namespace AceLand.WebRequest.Core
 
         protected override void DisposeManagedResources()
         {
-            Header.Clear();
+            Headers.Clear();
         }
         
         public RequestMethod RequestMethod { get; internal set; }
         public DataType DataType => DataType.Json;
 
-        public Uri Url
+        public Uri Uri
         {
             get
             {
@@ -43,7 +43,7 @@ namespace AceLand.WebRequest.Core
 
         public float Timeout { get; internal set; } = -1;
 
-        public readonly List<FormData> Header = new();
+        public readonly List<FormData> Headers = new();
         public readonly List<FormData> Parameters = new();
 
         private string url;
@@ -51,7 +51,7 @@ namespace AceLand.WebRequest.Core
         public string HeaderText()
         {
             var text = string.Empty;
-            foreach (var data in Header)
+            foreach (var data in Headers)
                 text += $">>>>>> {data.Key} : {data.Value}\n";
             text = text.TrimEnd('\n');
             return text;

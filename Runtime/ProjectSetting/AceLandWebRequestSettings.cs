@@ -32,6 +32,15 @@ namespace AceLand.WebRequest.ProjectSetting
         public string DefaultSection => defaultApiSection.SectionName;
         public string DefaultApiUrl => defaultApiSection.ApiUrl;
 
+        public bool ContainSection(string sectionName) => apiSections.AsValueEnumerable()
+            .Any(s => s.SectionName == sectionName);
+
+        public bool TryGetSection(string sectionName, out ApiSectionsProfile section)
+        {
+            section = apiSections.AsValueEnumerable()
+                .FirstOrDefault(s => s.SectionName == sectionName);
+            return section != null;
+        }
         public string SectionApiUrl(string sectionName)
         {
             var section = apiSections.AsValueEnumerable()
