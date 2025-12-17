@@ -8,8 +8,6 @@ using AceLand.Library.Disposable;
 using AceLand.Library.Json;
 using AceLand.TaskUtils;
 using AceLand.WebRequest.Core;
-using AceLand.WebRequest.Exceptions;
-using AceLand.WebRequest.Profiles;
 using AceLand.WebRequest.ProjectSetting;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -109,15 +107,15 @@ namespace AceLand.WebRequest.Handle
                                 return Result;
                             }
 
-                            if ((int)Response.StatusCode >= 500 ||
-                                Response.StatusCode == (HttpStatusCode)429)
+                            if (Response.StatusCode >= HttpStatusCode.InternalServerError ||
+                                Response.StatusCode == HttpStatusCode.TooManyRequests)
                             {
                                 // Retry for server errors (5xx) and rate limiting (429)
-                                throw new HttpServerErrorException(Response.StatusCode, response);
+                                throw new HttpRequestException(Response.StatusCode.ToString());
                             }
 
                             // Throw an exception for other HTTP errors (4xx)
-                            throw new HttpErrorException(Response.StatusCode, response);
+                            throw new HttpRequestException(Response.StatusCode.ToString());
                         }
                         catch (JsonReaderException ex)
                         {
