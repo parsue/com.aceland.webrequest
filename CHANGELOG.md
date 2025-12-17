@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+# [2.1.4] - 2025-12-17
+### Modified
+- [Logging] http error log from error to warning
+
 # [2.1.3] - 2025-12-17
 ### Removed
 - [Exceptions] HttpServerErrorException and HttpErrorException
