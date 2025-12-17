@@ -117,15 +117,9 @@ namespace AceLand.WebRequest.Handle
                             // Throw an exception for other HTTP errors (4xx)
                             throw new HttpRequestException(Response.StatusCode.ToString());
                         }
-                        catch (JsonReaderException ex)
-                        {
-                            Debug.LogError($"Json Parse Fail: {ex.Message}\n" +
-                                           $"Exception: {ex}");
-                            throw;
-                        }
                         catch (HttpRequestException ex)
                         {
-                            Debug.LogError($"Request failed: {ex.Message}\n" +
+                            Debug.LogWarning($"Request failed: {ex.Message}\n" +
                                            $"Exception: {ex}");
                             throw;
                         }
@@ -133,10 +127,23 @@ namespace AceLand.WebRequest.Handle
                         {
                             // Check if the cancellation was user-initiated
                             if (LinkedToken.IsCancellationRequested)
-                                throw new OperationCanceledException("The request was canceled by the user.", ex,
-                                    LinkedToken);
+                            {
+                                Debug.LogWarning("Request failed: canceled by user\n" +
+                                                 $"Exception: {ex}");
+                                throw new OperationCanceledException(
+                                    "The request was canceled by the user.",
+                                    ex,
+                                    LinkedToken
+                                );
+                            }
 
                             await HandleRetry(attempt, ex);
+                        }
+                        catch (JsonReaderException ex)
+                        {
+                            Debug.LogError($"Json Parse Fail: {ex.Message}\n" +
+                                           $"Exception: {ex}");
+                            throw;
                         }
                         catch (Exception ex)
                         {
