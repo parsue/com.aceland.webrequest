@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+# [2.1.3] - 2025-12-17
+### Removed
+- [Exceptions] HttpServerErrorException and HttpErrorException
+
 # [2.1.2] - 2025-12-16
 ### Added
 - [Request Builder] WithSection(string section)
