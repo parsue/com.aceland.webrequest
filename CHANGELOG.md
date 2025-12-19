@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+# [2.1.5] - 2025-12-19
+### Added
+- [Exceptions] WebException for connection error
+- [Exceptions] HttpServerErrorException for 500/429
+- [Exceptions] HttpErrorException for other know error
+### Fixed
+- [Exceptions] WebException is ignored on inner exception in HttpRequestException
+
 # [2.1.4] - 2025-12-17
 ### Modified
 - [Logging] http error log from error to warning
