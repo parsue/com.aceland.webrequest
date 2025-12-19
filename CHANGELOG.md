@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+# [2.1.6] - 2025-12-19
+### Fixed
+- [Request] handle retry on Connection Error
+- [Request] handle cancel case with by user or unknown reason
+
 # [2.1.5] - 2025-12-19
 ### Added
 - [Exceptions] WebException for connection error
