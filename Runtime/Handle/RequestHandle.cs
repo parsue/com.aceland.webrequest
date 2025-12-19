@@ -57,6 +57,8 @@ namespace AceLand.WebRequest.Handle
         private CancellationTokenSource LinkedTokenSource { get; set; }
         private CancellationToken LinkedToken => LinkedTokenSource.Token;
 
+        private WebException retryException;
+
         public void Cancel()
         {
             LinkedTokenSource?.Cancel();
@@ -128,14 +130,15 @@ namespace AceLand.WebRequest.Handle
                         {
                             if (ex.InnerException is WebException we)
                             {
-                                Debug.LogWarning($"Request failed: {we.Message}\n" +
-                                                 $"Exception: {we}");
-                                throw we;
+                                retryException = we;
+                                await HandleRetry(attempt, ex);
                             }
-                            
-                            Debug.LogWarning($"Request failed: {ex.Message}\n" +
-                                           $"Exception: {ex}");
-                            throw;
+                            else
+                            {
+                                Debug.LogWarning($"Request failed: {ex.Message}\n" +
+                                                 $"Exception: {ex}");
+                                throw;
+                            }
                         }
                         catch (TaskCanceledException ex)
                         {
@@ -150,8 +153,14 @@ namespace AceLand.WebRequest.Handle
                                     LinkedToken
                                 );
                             }
-
-                            await HandleRetry(attempt, ex);
+                            
+                            Debug.LogWarning("Request failed: canceled by unknown reason\n" +
+                                             $"Exception: {ex}");
+                            throw new OperationCanceledException(
+                                "The request was canceled by unknown reason.",
+                                ex,
+                                LinkedToken
+                            );
                         }
                         catch (JsonReaderException ex)
                         {
@@ -171,8 +180,9 @@ namespace AceLand.WebRequest.Handle
 
                     // Handle connection-related errors
                     if (Settings.LoggingLevel.IsAcceptedLevel())
-                        Debug.LogError($"Max retries reached. Request failed due to a connection error.");
-                    throw new Exception("Max retries reached. Request failed due to a connection error.");
+                        Debug.LogError($"Max retries reached. Request failed due to: {retryException.Message}\n" +
+                                       $"Exception: {retryException}");
+                    throw retryException;
                 },
                 LinkedToken
             );
