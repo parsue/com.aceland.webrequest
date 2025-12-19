@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 ---
 
-# [2.1.6] - 2025-12-19
+# [2.1.7] - 2025-12-19
 ### Fixed
 - [Request] handle retry on Connection Error
 - [Request] handle cancel case with by user or unknown reason
