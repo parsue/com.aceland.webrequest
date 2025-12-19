@@ -122,16 +122,15 @@ namespace AceLand.WebRequest.Handle
                         }
                         catch (WebException ex)
                         {
-                            Debug.LogWarning($"Request failed: {ex.Message}\n" +
-                                             $"Exception: {ex}");
-                            await HandleRetry(attempt, ex);
+                            retryException = ex;
+                            await HandleRetry(attempt);
                         }
                         catch (HttpRequestException ex)
                         {
                             if (ex.InnerException is WebException we)
                             {
                                 retryException = we;
-                                await HandleRetry(attempt, ex);
+                                await HandleRetry(attempt);
                             }
                             else
                             {
@@ -154,13 +153,8 @@ namespace AceLand.WebRequest.Handle
                                 );
                             }
                             
-                            Debug.LogWarning("Request failed: canceled by unknown reason\n" +
-                                             $"Exception: {ex}");
-                            throw new OperationCanceledException(
-                                "The request was canceled by unknown reason.",
-                                ex,
-                                LinkedToken
-                            );
+                            retryException = new WebException("Canceled by Connection Error", ex);
+                            await HandleRetry(attempt);
                         }
                         catch (JsonReaderException ex)
                         {
@@ -188,14 +182,14 @@ namespace AceLand.WebRequest.Handle
             );
         }
 
-        private async Task HandleRetry<T>(int attempt, T exception) where T : Exception
+        private async Task HandleRetry(int attempt)
         {
             var retryInterval = Settings.GetRetryInterval(attempt);
             
             if (Settings.LoggingLevel.IsAcceptedLevel())
                 Debug.LogWarning($"Connection error on attempt {attempt}: " +
-                                 $"{exception.Message}. Retry after {retryInterval} ms...\n" +
-                                 $"Exception:\n{exception}");
+                                 $"{retryException.Message}. Retry after {retryInterval} ms...\n" +
+                                 $"Exception:\n{retryException}");
             
             await Task.Delay(retryInterval, LinkedToken);
         }
