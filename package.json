@@ -20,7 +20,7 @@
   ],
   "dependencies": {
     "com.aceland.library": "2.1.4",
-    "com.aceland.taskutils": "2.1.2",
+    "com.aceland.taskutils": "2.1.3",
     "com.unity.nuget.newtonsoft-json": "3.2.1"
   },
   "publishConfig": {
