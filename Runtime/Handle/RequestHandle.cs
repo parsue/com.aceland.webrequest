@@ -8,6 +8,7 @@ using AceLand.Library.Disposable;
 using AceLand.Library.Json;
 using AceLand.TaskUtils;
 using AceLand.WebRequest.Core;
+using AceLand.WebRequest.Exceptions;
 using AceLand.WebRequest.ProjectSetting;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -111,14 +112,27 @@ namespace AceLand.WebRequest.Handle
                                 Response.StatusCode == HttpStatusCode.TooManyRequests)
                             {
                                 // Retry for server errors (5xx) and rate limiting (429)
-                                throw new HttpRequestException(Response.StatusCode.ToString());
+                                throw new HttpServerErrorException(Response.StatusCode, response);
                             }
 
                             // Throw an exception for other HTTP errors (4xx)
-                            throw new HttpRequestException(Response.StatusCode.ToString());
+                            throw new HttpErrorException(Response.StatusCode, response);
+                        }
+                        catch (WebException ex)
+                        {
+                            Debug.LogWarning($"Request failed: {ex.Message}\n" +
+                                             $"Exception: {ex}");
+                            throw;
                         }
                         catch (HttpRequestException ex)
                         {
+                            if (ex.InnerException is WebException we)
+                            {
+                                Debug.LogWarning($"Request failed: {we.Message}\n" +
+                                                 $"Exception: {we}");
+                                throw we;
+                            }
+                            
                             Debug.LogWarning($"Request failed: {ex.Message}\n" +
                                            $"Exception: {ex}");
                             throw;
