@@ -124,7 +124,7 @@ namespace AceLand.WebRequest.Handle
                         {
                             Debug.LogWarning($"Request failed: {ex.Message}\n" +
                                              $"Exception: {ex}");
-                            throw;
+                            await HandleRetry(attempt, ex);
                         }
                         catch (HttpRequestException ex)
                         {
