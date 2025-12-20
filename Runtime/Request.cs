@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
-using AceLand.Library.BuildLeveling;
-using AceLand.Library.Extensions;
+using AceLand.ProjectSetting;
 using AceLand.WebRequest.Core;
 using AceLand.WebRequest.ProjectSetting;
 using Newtonsoft.Json.Linq;
@@ -82,7 +81,7 @@ namespace AceLand.WebRequest
                 headers.Add(new FormData(Settings.TimeKey, time));
             }
             
-            var headerList = sectionName.IsNullOrEmptyOrWhiteSpace()
+            var headerList = string.IsNullOrEmpty(sectionName)
                 ? Settings.DefaultHeaders()
                 : Settings.SectionHeaders(sectionName);
             

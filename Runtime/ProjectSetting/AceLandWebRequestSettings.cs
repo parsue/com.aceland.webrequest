@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
-using AceLand.Library.BuildLeveling;
-using AceLand.Library.ProjectSetting;
+using AceLand.ProjectSetting;
 using AceLand.WebRequest.Profiles;
 using UnityEngine;
 using ZLinq;
