@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+# [2.2.0] - 2025-12-20
+### Added
+- Dependency on AceLand.ProjectSetting
+
 # [2.1.8] - 2025-12-19
 ### Fixed
 - [Request] handle retry on Connection Error
