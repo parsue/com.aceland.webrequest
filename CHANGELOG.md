@@ -4,20 +4,24 @@ All notable changes to this project will be documented in this file.
 
 ---
 
-# [2.2.1] - 2025-12-21
+## [2.2.2] - 2025-12-22
+### Added
+- [Request Builder] warning and exception in builder
+
+## [2.2.1] - 2025-12-21
 ### Modified
 - Dependency
 
-# [2.2.0] - 2025-12-20
+## [2.2.0] - 2025-12-20
 ### Added
 - Dependency on AceLand.ProjectSetting
 
-# [2.1.8] - 2025-12-19
+## [2.1.8] - 2025-12-19
 ### Fixed
 - [Request] handle retry on Connection Error
 - [Request] handle cancel case with by user or unknown reason
 
-# [2.1.5] - 2025-12-19
+## [2.1.5] - 2025-12-19
 ### Added
 - [Exceptions] WebException for connection error
 - [Exceptions] HttpServerErrorException for 500/429
@@ -25,15 +29,15 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 - [Exceptions] WebException is ignored on inner exception in HttpRequestException
 
-# [2.1.4] - 2025-12-17
+## [2.1.4] - 2025-12-17
 ### Modified
 - [Logging] http error log from error to warning
 
-# [2.1.3] - 2025-12-17
+## [2.1.3] - 2025-12-17
 ### Removed
 - [Exceptions] HttpServerErrorException and HttpErrorException
 
-# [2.1.2] - 2025-12-16
+## [2.1.2] - 2025-12-16
 ### Added
 - [Request Builder] WithSection(string section)
 - [Request Builder] WithoutSection()
