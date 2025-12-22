@@ -41,12 +41,20 @@ namespace AceLand.WebRequest
         {
             if (!Settings.LoggingLevel.IsAcceptedLevel()) return;
 
+            var url = Settings.FullLoggingLevel.IsAcceptedLevel()
+                ? body.Url
+                : ShortenUrl(body.Url);
+            var fullContent = Settings.FullLoggingLevel.IsAcceptedLevel()
+                ? $"\n>>> Header:\n{body.HeaderText()}\n>>> Body:\n{body.BodyText()}"
+                : string.Empty;
             var msg = body.RequestMethod is RequestMethod.Get or RequestMethod.Delete
-                ? $"Send Request: {body.RequestMethod} || {ShortenUrl(body.Url.ToUri())}\n" +
-                  $">>> Timeout: {body.Timeout} ms"
-                : $"Send Web Request: {body.RequestMethod} || {body.Url}\n" +
+                ? $"Send Request: {body.RequestMethod} || {url}\n" +
+                  $">>> Timeout: {body.Timeout} ms" +
+                  fullContent
+                : $"Send Web Request: {body.RequestMethod} || {url}\n" +
                   $">>> Timeout: {body.Timeout} ms\n" +
-                  $">>> Content Format: {body.DataType}";
+                  $">>> Content Format: {body.DataType}" +
+                  fullContent;
 
             Debug.Log(msg);
         }
@@ -55,7 +63,10 @@ namespace AceLand.WebRequest
         {
             if (!Settings.LoggingLevel.IsAcceptedLevel()) return;
             
-            var msg = $"Request Success: {body.RequestMethod} || {ShortenUrl(body.Url.ToUri())}";
+            var url = Settings.FullLoggingLevel.IsAcceptedLevel()
+                ? body.Url
+                : ShortenUrl(body.Url);
+            var msg = $"Request Success: {body.RequestMethod} || {url}";
             if (Settings.ResultLoggingLevel.IsAcceptedLevel())
                 msg += $"\n{response}";
             Debug.Log(msg);
@@ -64,8 +75,11 @@ namespace AceLand.WebRequest
         internal static void PrintFailLog(IRequestBody body, JToken response)
         {
             if (!Settings.LoggingLevel.IsAcceptedLevel()) return;
-            
-            var msg = $"Request Fail: {body.RequestMethod} || {ShortenUrl(body.Url.ToUri())}";
+
+            var url = Settings.FullLoggingLevel.IsAcceptedLevel()
+                ? body.Url
+                : ShortenUrl(body.Url);
+            var msg = $"Request Fail: {body.RequestMethod} || {url}";
             if (Settings.ResultLoggingLevel.IsAcceptedLevel())
                 msg += $"\n{response}";
             Debug.Log(msg);

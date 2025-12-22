@@ -134,8 +134,9 @@ namespace AceLand.WebRequest.Handle
                             }
                             else
                             {
-                                Debug.LogWarning($"Request failed: {ex.Message}\n" +
-                                                 $"Exception: {ex}");
+                                if (Settings.LoggingLevel.IsAcceptedLevel())
+                                    Debug.LogWarning($"Request failed: {ex.Message}\n" +
+                                                     $"Exception: {ex}");
                                 throw;
                             }
                         }
@@ -144,8 +145,9 @@ namespace AceLand.WebRequest.Handle
                             // Check if the cancellation was user-initiated
                             if (LinkedToken.IsCancellationRequested)
                             {
-                                Debug.LogWarning("Request failed: canceled by user\n" +
-                                                 $"Exception: {ex}");
+                                if (Settings.LoggingLevel.IsAcceptedLevel())
+                                    Debug.LogWarning("Request failed: canceled by user\n" +
+                                                     $"Exception: {ex}");
                                 throw new OperationCanceledException(
                                     "The request was canceled by the user.",
                                     ex,
@@ -158,8 +160,9 @@ namespace AceLand.WebRequest.Handle
                         }
                         catch (JsonReaderException ex)
                         {
-                            Debug.LogError($"Json Parse Fail: {ex.Message}\n" +
-                                           $"Exception: {ex}");
+                            if (Settings.LoggingLevel.IsAcceptedLevel())
+                                Debug.LogError($"Json Parse Fail: {ex.Message}\n" +
+                                               $"Exception: {ex}");
                             throw;
                         }
                         catch (Exception ex)

@@ -11,6 +11,7 @@ namespace AceLand.WebRequest.ProjectSetting
     {
         [SerializeField] private BuildLevel loggingLevel = BuildLevel.Production;
         [SerializeField] private BuildLevel resultLoggingLevel = BuildLevel.Development;
+        [SerializeField] private BuildLevel fullLoggingLevel = BuildLevel.Development;
         [SerializeField] private bool checkJsonBeforeSend;
         [SerializeField] private bool forceHttpsScheme = true;
         [SerializeField] private bool addTimeInHeader = true;
@@ -67,6 +68,7 @@ namespace AceLand.WebRequest.ProjectSetting
         
         public BuildLevel LoggingLevel => loggingLevel;
         public BuildLevel ResultLoggingLevel => resultLoggingLevel;
+        public BuildLevel FullLoggingLevel => fullLoggingLevel;
         public bool CheckJsonBeforeSend => checkJsonBeforeSend;
         public bool ForceHttpsScheme => forceHttpsScheme;
         public bool AddTimeInHeader => addTimeInHeader;

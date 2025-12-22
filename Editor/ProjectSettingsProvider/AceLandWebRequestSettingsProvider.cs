@@ -34,7 +34,9 @@ namespace AceLand.WebRequest.Editor.ProjectSettingsProvider
 
         public override void OnGUI(string searchContext)
         {
-            SerializedProperty(out var loggingLevel, out var resultLoggingLevel,
+            SerializedProperty(
+                out var loggingLevel, out var resultLoggingLevel,
+                out var fullLoggingLevel,
                 out var checkJsonBeforeSend, out var forceHttpsScheme,
                 out var addTimeInHeader, out var timeKey,
                 out var autoFillHeaders,
@@ -48,6 +50,7 @@ namespace AceLand.WebRequest.Editor.ProjectSettingsProvider
             EditorGUILayout.LabelField("Logging", EditorStyles.boldLabel);
             DrawFixWidthProperty(loggingLevel);
             DrawFixWidthProperty(resultLoggingLevel);
+            DrawFixWidthProperty(fullLoggingLevel);
 
             EditorGUILayout.Space(12f);
             EditorGUILayout.LabelField("Checking Options", EditorStyles.boldLabel);
@@ -91,7 +94,9 @@ namespace AceLand.WebRequest.Editor.ProjectSettingsProvider
             }
         }
         
-        private void SerializedProperty(out SerializedProperty loggingLevel, out SerializedProperty resultLoggingLevel,
+        private void SerializedProperty(
+            out SerializedProperty loggingLevel, out SerializedProperty resultLoggingLevel,
+            out SerializedProperty fullLoggingLevel,
             out SerializedProperty checkJsonBeforeSend, out SerializedProperty forceHttpsScheme,
             out SerializedProperty addTimeInHeader, out SerializedProperty timeKey,
             out SerializedProperty autoFillHeaders, 
@@ -101,6 +106,7 @@ namespace AceLand.WebRequest.Editor.ProjectSettingsProvider
         {
             loggingLevel = Settings.FindProperty("loggingLevel");
             resultLoggingLevel = Settings.FindProperty("resultLoggingLevel");
+            fullLoggingLevel = Settings.FindProperty("fullLoggingLevel");
             checkJsonBeforeSend = Settings.FindProperty("checkJsonBeforeSend");
             forceHttpsScheme = Settings.FindProperty("forceHttpsScheme");
             addTimeInHeader = Settings.FindProperty("addTimeInHeader");
