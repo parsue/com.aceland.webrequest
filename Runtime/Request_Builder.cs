@@ -48,8 +48,8 @@ namespace AceLand.WebRequest
                     _url = section.ApiUrl + _url;
 
                 if (!CheckUrl(_url))
-                    throw new Exception($"Url is not https scheme : {_body.Url}");
-
+                    throw new Exception($"Invalid Url : {_url}");
+                
                 _body.Url = _url;
 
                 var headers = GetHeader(section == null ? null : section.SectionName);

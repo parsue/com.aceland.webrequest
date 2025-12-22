@@ -93,15 +93,12 @@ namespace AceLand.WebRequest
 
         private static bool CheckUrl(string url)
         {
-            if (!Settings.ForceHttpsScheme) return true;
-            var uri = url.ToUri();
-            return uri.Scheme == Uri.UriSchemeHttps;
-
+            return !Settings.ForceHttpsScheme || Uri.TryCreate(url, UriKind.Absolute, out _);
         }
 
-        private static string ShortenUrl(Uri uri)
+        private static string ShortenUrl(string url)
         {
-            var urls = uri.ToString().Split('?');
+            var urls = url.Split('?');
             return urls.Length switch
             {
                 > 1 => urls[0] + "?...",

@@ -76,7 +76,7 @@ namespace AceLand.WebRequest
                     _url = section.ApiUrl + _url;
 
                 if (!CheckUrl(_url))
-                    throw new Exception($"Url is not https scheme : {_url}");
+                    throw new Exception($"Invalid Url : {_url}");
                 
                 if (_timeout <= 0)
                     _timeout = Settings.RequestTimeout;
