@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [2.2.3] - 2025-12-22
+### Added
+- [Project Settings] Full Logging Level - print all parameters, headers and body content in log
+- [Request Builder] fix url checking issue
+
 ## [2.2.2] - 2025-12-22
 ### Added
 - [Request Builder] warning and exception in builder
