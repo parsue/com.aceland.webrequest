@@ -42,9 +42,9 @@ namespace AceLand.WebRequest
             if (!Settings.LoggingLevel.IsAcceptedLevel()) return;
 
             var msg = body.RequestMethod is RequestMethod.Get or RequestMethod.Delete
-                ? $"Send Request: {body.RequestMethod} || {ShortenUrl(body.Uri)}\n" +
+                ? $"Send Request: {body.RequestMethod} || {ShortenUrl(body.Url.ToUri())}\n" +
                   $">>> Timeout: {body.Timeout} ms"
-                : $"Send Web Request: {body.RequestMethod} || {body.Uri}\n" +
+                : $"Send Web Request: {body.RequestMethod} || {body.Url}\n" +
                   $">>> Timeout: {body.Timeout} ms\n" +
                   $">>> Content Format: {body.DataType}";
 
@@ -55,7 +55,7 @@ namespace AceLand.WebRequest
         {
             if (!Settings.LoggingLevel.IsAcceptedLevel()) return;
             
-            var msg = $"Request Success: {body.RequestMethod} || {ShortenUrl(body.Uri)}";
+            var msg = $"Request Success: {body.RequestMethod} || {ShortenUrl(body.Url.ToUri())}";
             if (Settings.ResultLoggingLevel.IsAcceptedLevel())
                 msg += $"\n{response}";
             Debug.Log(msg);
@@ -65,7 +65,7 @@ namespace AceLand.WebRequest
         {
             if (!Settings.LoggingLevel.IsAcceptedLevel()) return;
             
-            var msg = $"Request Fail: {body.RequestMethod} || {ShortenUrl(body.Uri)}";
+            var msg = $"Request Fail: {body.RequestMethod} || {ShortenUrl(body.Url.ToUri())}";
             if (Settings.ResultLoggingLevel.IsAcceptedLevel())
                 msg += $"\n{response}";
             Debug.Log(msg);

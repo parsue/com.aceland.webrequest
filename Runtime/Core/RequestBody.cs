@@ -20,23 +20,22 @@ namespace AceLand.WebRequest.Core
         public RequestMethod RequestMethod { get; internal set; }
         public DataType DataType => DataType.Json;
 
-        public Uri Uri
+        public string Url
         {
             get
             {
-                if (Parameters.Count == 0) return url.ToUri();
-                var uri = Parameters.AsValueEnumerable()
+                if (Parameters.Count == 0) return url;
+                var u = Parameters.AsValueEnumerable()
                     .Aggregate(
                         $"{url}?",
                         (current, param) => current + $"{param.Key}={param.Value}&")
-                    .TrimEnd('&')
-                    .ToUri();
-                return uri;
+                    .TrimEnd('&');
+                return u;
             }
             
             internal set
             {
-                url = value.ToString();
+                url = value;
             }
         }
 

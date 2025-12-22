@@ -6,7 +6,7 @@ namespace AceLand.WebRequest.Core
     {
         RequestMethod RequestMethod { get; }
         DataType DataType { get; }
-        Uri Uri { get; }
+        string Url { get; }
         float Timeout { get; }
         void Dispose();
         string HeaderText();

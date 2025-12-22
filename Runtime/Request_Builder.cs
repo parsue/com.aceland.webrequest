@@ -48,9 +48,9 @@ namespace AceLand.WebRequest
                     _url = section.ApiUrl + _url;
 
                 if (!CheckUrl(_url))
-                    throw new Exception($"Url is not https scheme : {_body.Uri}");
+                    throw new Exception($"Url is not https scheme : {_body.Url}");
 
-                _body.Uri = _url.ToUri();
+                _body.Url = _url;
 
                 var headers = GetHeader(section == null ? null : section.SectionName);
                 foreach (var header in headers)
@@ -73,12 +73,21 @@ namespace AceLand.WebRequest
 
             public IRequestBuilder WithTimeout(int ms)
             {
+                if (ms < 0)
+                {
+                    Debug.LogWarning($"Timeout Ignored: {ms}ms is not accepted");
+                    return this;
+                }
+                
                 _body.Timeout = ms;
                 return this;
             }
             
             public IRequestBuilder WithUrl(string url)
             {
+                if (string.IsNullOrEmpty(url.Trim()))
+                    throw new ArgumentNullException(nameof(url));
+                
                 _url = url;
                 return this;
             }
@@ -108,7 +117,11 @@ namespace AceLand.WebRequest
 
             private void AddHeader(string key, string value)
             {
-                if (string.IsNullOrEmpty(key) || string.IsNullOrEmpty(value)) return;
+                if (string.IsNullOrEmpty(key) || string.IsNullOrEmpty(value))
+                {
+                    Debug.LogWarning($"Header Ignored: key or value is null or empty. Key: {key??"null"}, Value: {value??"null"}");
+                    return;
+                }
                 
                 var index = -1;
                 for (var i = 0; i < _body.Headers.Count; i++)

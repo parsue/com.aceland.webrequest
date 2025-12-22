@@ -89,11 +89,11 @@ namespace AceLand.WebRequest.Handle
                         {
                             Response = Body.RequestMethod switch
                             {
-                                RequestMethod.Post => await Client.PostAsync(Body.Uri, Content, LinkedToken),
-                                RequestMethod.Get => await Client.GetAsync(Body.Uri, LinkedToken),
-                                RequestMethod.Put => await Client.PutAsync(Body.Uri, Content, LinkedToken),
-                                RequestMethod.Delete => await Client.DeleteAsync(Body.Uri, LinkedToken),
-                                RequestMethod.Patch => await Client.PatchAsync(Body.Uri, Content, LinkedToken),
+                                RequestMethod.Post => await Client.PostAsync(Body.Url, Content, LinkedToken),
+                                RequestMethod.Get => await Client.GetAsync(Body.Url, LinkedToken),
+                                RequestMethod.Put => await Client.PutAsync(Body.Url, Content, LinkedToken),
+                                RequestMethod.Delete => await Client.DeleteAsync(Body.Url, LinkedToken),
+                                RequestMethod.Patch => await Client.PatchAsync(Body.Url, Content, LinkedToken),
                                 _ => throw new ArgumentOutOfRangeException()
                             };
 

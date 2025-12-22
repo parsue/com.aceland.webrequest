@@ -253,7 +253,7 @@ namespace AceLand.WebRequest
                     case DataType.Json:
                         var jsonBody = new JsonBody();
                         jsonBody.RequestMethod = _requestMethod;
-                        jsonBody.Uri = _url.ToUri();
+                        jsonBody.Url = _url;
                         jsonBody.Timeout = _timeout;
                         jsonBody.Headers.AddRange(_headers);
                         jsonBody.Parameters.AddRange(_parameters);
@@ -262,7 +262,7 @@ namespace AceLand.WebRequest
                     case DataType.Form:
                         var formBody = new FormBody();
                         formBody.RequestMethod = _requestMethod;
-                        formBody.Uri = _url.ToUri();
+                        formBody.Url = _url;
                         formBody.Timeout = _timeout;
                         formBody.Headers.AddRange(_headers);
                         formBody.Parameters.AddRange(_parameters);
@@ -271,7 +271,7 @@ namespace AceLand.WebRequest
                     case DataType.Multipart:
                         var multipartBody = new MultipartBody();
                         multipartBody.RequestMethod = _requestMethod;
-                        multipartBody.Uri = _url.ToUri();
+                        multipartBody.Url = _url;
                         multipartBody.Timeout = _timeout;
                         multipartBody.Headers.AddRange(_headers);
                         multipartBody.Parameters.AddRange(_parameters);
