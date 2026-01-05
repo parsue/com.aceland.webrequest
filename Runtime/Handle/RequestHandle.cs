@@ -85,6 +85,8 @@ namespace AceLand.WebRequest.Handle
                 {
                     for (var attempt = 1; attempt <= Settings.RequestRetry; attempt++)
                     {
+                        HttpStatusCode httpStatusCode;
+                        
                         try
                         {
                             Response = Body.RequestMethod switch
@@ -101,7 +103,7 @@ namespace AceLand.WebRequest.Handle
                             var jsonResponse = response.IsValidJson()
                                 ? response
                                 : $"{{\"message\":\"{response}\"}}";
-
+                            
                             if (Response.IsSuccessStatusCode)
                             {
                                 Result = JToken.Parse(jsonResponse);
@@ -110,15 +112,17 @@ namespace AceLand.WebRequest.Handle
                                 return Result;
                             }
 
-                            if (Response.StatusCode >= HttpStatusCode.InternalServerError ||
-                                Response.StatusCode == HttpStatusCode.TooManyRequests)
+                            httpStatusCode = Response.StatusCode;
+
+                            if (httpStatusCode is >= HttpStatusCode.InternalServerError or
+                                HttpStatusCode.TooManyRequests)
                             {
                                 // Retry for server errors (5xx) and rate limiting (429)
-                                throw new HttpServerErrorException(Response.StatusCode, response);
+                                throw new HttpServerErrorException(httpStatusCode, response);
                             }
 
                             // Throw an exception for other HTTP errors (4xx)
-                            throw new HttpErrorException(Response.StatusCode, response);
+                            throw new HttpErrorException(httpStatusCode, response);
                         }
                         catch (WebException ex)
                         {
@@ -167,6 +171,9 @@ namespace AceLand.WebRequest.Handle
                         }
                         catch (Exception ex)
                         {
+                            if (ex.InnerException != null)
+                                throw ex.InnerException;
+                            
                             // For non-retryable errors, rethrow immediately
                             if (Settings.LoggingLevel.IsAcceptedLevel())
                                 Debug.LogError($"Request failed: {ex.Message}\n" +
