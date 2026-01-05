@@ -161,9 +161,6 @@ namespace AceLand.WebRequest.Handle
                         }
                         catch (Exception ex)
                         {
-                            var e = ex.InnerException ?? ex.GetBaseException();
-                            if (e != null) throw e;
-
                             // For non-retryable errors, rethrow immediately
                             if (Settings.LoggingLevel.IsAcceptedLevel())
                                 Debug.LogError($"Request failed: {ex.Message}\n" +
@@ -177,8 +174,8 @@ namespace AceLand.WebRequest.Handle
                     if (Settings.LoggingLevel.IsAcceptedLevel())
                         Debug.LogError($"Max retries reached. Request failed due to: {msg}\n" +
                                        $"Exception: {retryException}");
-                    
-                    throw new WebException(msg);
+
+                    throw retryException;
                 },
                 LinkedToken
             );
