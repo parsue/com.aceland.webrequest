@@ -85,8 +85,6 @@ namespace AceLand.WebRequest.Handle
                 {
                     for (var attempt = 1; attempt <= Settings.RequestRetry; attempt++)
                     {
-                        HttpStatusCode httpStatusCode;
-                        
                         try
                         {
                             Response = Body.RequestMethod switch
@@ -112,7 +110,7 @@ namespace AceLand.WebRequest.Handle
                                 return Result;
                             }
 
-                            httpStatusCode = Response.StatusCode;
+                            var httpStatusCode = Response.StatusCode;
 
                             if (httpStatusCode is >= HttpStatusCode.InternalServerError or
                                 HttpStatusCode.TooManyRequests)
@@ -124,25 +122,17 @@ namespace AceLand.WebRequest.Handle
                             // Throw an exception for other HTTP errors (4xx)
                             throw new HttpErrorException(httpStatusCode, response);
                         }
+                        catch (HttpRequestException ex)
+                        {
+                            if (Settings.LoggingLevel.IsAcceptedLevel())
+                                Debug.LogWarning($"Request failed: {ex.Message}\n" +
+                                                 $"Exception: {ex}");
+                            throw;
+                        }
                         catch (WebException ex)
                         {
                             retryException = ex;
                             await HandleRetry(attempt);
-                        }
-                        catch (HttpRequestException ex)
-                        {
-                            if (ex.InnerException is WebException we)
-                            {
-                                retryException = we;
-                                await HandleRetry(attempt);
-                            }
-                            else
-                            {
-                                if (Settings.LoggingLevel.IsAcceptedLevel())
-                                    Debug.LogWarning($"Request failed: {ex.Message}\n" +
-                                                     $"Exception: {ex}");
-                                throw;
-                            }
                         }
                         catch (TaskCanceledException ex)
                         {
@@ -171,9 +161,9 @@ namespace AceLand.WebRequest.Handle
                         }
                         catch (Exception ex)
                         {
-                            if (ex.InnerException != null)
-                                throw ex.InnerException;
-                            
+                            var e = ex.InnerException ?? ex.GetBaseException();
+                            if (e != null) throw e;
+
                             // For non-retryable errors, rethrow immediately
                             if (Settings.LoggingLevel.IsAcceptedLevel())
                                 Debug.LogError($"Request failed: {ex.Message}\n" +
@@ -183,10 +173,12 @@ namespace AceLand.WebRequest.Handle
                     }
 
                     // Handle connection-related errors
+                    var msg = retryException.Message;
                     if (Settings.LoggingLevel.IsAcceptedLevel())
-                        Debug.LogError($"Max retries reached. Request failed due to: {retryException.Message}\n" +
+                        Debug.LogError($"Max retries reached. Request failed due to: {msg}\n" +
                                        $"Exception: {retryException}");
-                    throw retryException;
+                    
+                    throw new WebException(msg);
                 },
                 LinkedToken
             );
