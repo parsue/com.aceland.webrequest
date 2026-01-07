@@ -161,6 +161,9 @@ namespace AceLand.WebRequest.Handle
                         }
                         catch (Exception ex)
                         {
+                            var e = ex.InnerException ?? ex.GetBaseException();
+                            if (e != null) throw e;
+                            
                             // For non-retryable errors, rethrow immediately
                             if (Settings.LoggingLevel.IsAcceptedLevel())
                                 Debug.LogError($"Request failed: {ex.Message}\n" +
