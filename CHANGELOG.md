@@ -4,7 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ---
 
-## [2.2.5] -2026-01-05
+## [2.2.6] - 2026-01-07
+### Fixed
+- [Request Handle] wrong exception type issue
+
+## [2.2.5] - 2026-01-05
 ### Fixed
 - [Request Handle] handle inner exception
 
