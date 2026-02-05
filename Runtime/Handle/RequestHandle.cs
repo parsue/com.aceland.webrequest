@@ -22,9 +22,9 @@ namespace AceLand.WebRequest.Handle
         {
             var (client, content) = body.GetType() switch
             {
-                { } t when t == typeof(JsonBody) => RequestUtils.CreateWebRequest((JsonBody)body),
-                { } t when t == typeof(FormBody) => RequestUtils.CreateWebRequest((FormBody)body),
-                { } t when t == typeof(MultipartBody) => RequestUtils.CreateWebRequest((MultipartBody)body),
+                { } t when t == typeof(JsonBody) => RequestUtils.CreateWebRequest((JsonBody)body, body.Fingerprint),
+                { } t when t == typeof(FormBody) => RequestUtils.CreateWebRequest((FormBody)body, body.Fingerprint),
+                { } t when t == typeof(MultipartBody) => RequestUtils.CreateWebRequest((MultipartBody)body, body.Fingerprint),
                 _ => throw new Exception("Unknown type of data")
             };
             
