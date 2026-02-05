@@ -61,6 +61,8 @@ namespace AceLand.WebRequest
                 
                 if (_body.Timeout <= 0)
                     _body.Timeout = Settings.RequestTimeout;
+
+                _body.Fingerprint = _withoutSection ? null : section.RootCaFingerprint;
                 
                 return new RequestHandle(_body);
             }
