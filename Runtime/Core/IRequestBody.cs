@@ -8,6 +8,7 @@ namespace AceLand.WebRequest.Core
         DataType DataType { get; }
         string Url { get; }
         float Timeout { get; }
+        string Fingerprint { get; }
         void Dispose();
         string HeaderText();
         string BodyText();
