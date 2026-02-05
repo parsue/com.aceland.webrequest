@@ -90,8 +90,10 @@ namespace AceLand.WebRequest
                     if (_headers.AsValueEnumerable().Any(h => h.Key == header.Key)) continue;
                     _headers.Add(header);
                 }
+
+                var fingerprint = _withoutSection ? null : section.RootCaFingerprint;
                 
-                return new RequestHandle(CreateBody());
+                return new RequestHandle(CreateBody(fingerprint));
             }
 
             public IRequestBuilder WithLongRequest()
@@ -246,7 +248,7 @@ namespace AceLand.WebRequest
                 return this;
             }
 
-            private IRequestBody CreateBody()
+            private IRequestBody CreateBody(string fingerprint)
             {
                 switch (_dataType)
                 {
@@ -258,6 +260,7 @@ namespace AceLand.WebRequest
                         jsonBody.Headers.AddRange(_headers);
                         jsonBody.Parameters.AddRange(_parameters);
                         jsonBody.Body = _jsonBody;
+                        jsonBody.Fingerprint = fingerprint;
                         return jsonBody;
                     case DataType.Form:
                         var formBody = new FormBody();
@@ -267,6 +270,7 @@ namespace AceLand.WebRequest
                         formBody.Headers.AddRange(_headers);
                         formBody.Parameters.AddRange(_parameters);
                         formBody.Body.AddRange(_bodyData);
+                        formBody.Fingerprint = fingerprint;
                         return formBody;
                     case DataType.Multipart:
                         var multipartBody = new MultipartBody();
@@ -277,6 +281,7 @@ namespace AceLand.WebRequest
                         multipartBody.Parameters.AddRange(_parameters);
                         multipartBody.Body.AddRange(_bodyData);
                         multipartBody.StreamData.AddRange(_streamData);
+                        multipartBody.Fingerprint = fingerprint;
                         return null;
                     default:
                         throw new ArgumentOutOfRangeException();
