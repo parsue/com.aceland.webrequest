@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [2.3.0] - 2026-02-05
+### Added
+- [API Section Profile] Root CA fingerprint
+### Modified
+- [API Section Profile] Readonly Section Name, will update as filename
+
 ## [2.2.6] - 2026-01-07
 ### Fixed
 - [Request Handle] wrong exception type issue
