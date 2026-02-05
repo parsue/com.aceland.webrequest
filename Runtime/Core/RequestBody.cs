@@ -40,6 +40,7 @@ namespace AceLand.WebRequest.Core
         }
 
         public float Timeout { get; internal set; } = -1;
+        public string Fingerprint { get; internal set; } = null;
 
         public readonly List<FormData> Headers = new();
         public readonly List<FormData> Parameters = new();
