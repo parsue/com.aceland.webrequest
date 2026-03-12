@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [2.3.1] - 2026-03-12
+### Fixed
+- [Request Handle] fix handle empty response from service issue
+
 ## [2.3.0] - 2026-02-05
 ### Added
 - [API Section Profile] Root CA fingerprint
