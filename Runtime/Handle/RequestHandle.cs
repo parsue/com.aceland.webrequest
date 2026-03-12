@@ -100,7 +100,7 @@ namespace AceLand.WebRequest.Handle
                             var response = await Response.Content.ReadAsStringAsync();
                             var jsonResponse = response.IsValidJson()
                                 ? response
-                                : $"{{\"message\":\"{response}\"}}";
+                                : $"{{\"message\":\"{response ?? string.Empty}\"}}";
                             
                             if (Response.IsSuccessStatusCode)
                             {
