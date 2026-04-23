@@ -8,6 +8,12 @@ namespace AceLand.WebRequest
 {
     public static partial class Request
     {
+        public interface IUrlBuilder
+        {
+            IRequestBuilder WithUrl(string url);
+        }
+        
+        
         public interface IRequestBuilder
         {
             IRequestHandle Build();
@@ -17,11 +23,6 @@ namespace AceLand.WebRequest
             IRequestBuilder WithParam(string key, string value);
             IRequestBuilder WithLongRequest(); 
             IRequestBuilder WithTimeout(int ms); 
-        }
-
-        public interface IUrlBuilder
-        {
-            IRequestBuilder WithUrl(string url);
         }
 
         private class RequestHandleBuilder : IUrlBuilder, IRequestBuilder

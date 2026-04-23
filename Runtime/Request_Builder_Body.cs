@@ -6,6 +6,7 @@ using AceLand.Serialization.Json;
 using AceLand.Serialization.Models;
 using AceLand.WebRequest.Core;
 using AceLand.WebRequest.Handle;
+using UnityEngine;
 using ZLinq;
 
 namespace AceLand.WebRequest
@@ -19,28 +20,51 @@ namespace AceLand.WebRequest
 
         public interface IContentTypeBuilder
         {
-            IRequestJsonBodyBuilder WithJsonBody();
-            IRequestFormBodyBuilder WithFormBody();
-            IRequestMultipartBodyBuilder WithMultipartBody();
+            IRequestJsonBodyBuilder WithJsonContent();
+            IRequestFormBodyBuilder WithFormContent();
+            IRequestMultipartBodyBuilder WithMultipartContent();
+        }
+
+        public interface IRequestBodyBuilder
+        {
+            IRequestHandle Build();
         }
         
-        public interface IRequestJsonBodyBuilder : IRequestBuilder
+        public interface IRequestJsonBodyBuilder : IRequestBodyBuilder
         {
             IRequestJsonBodyBuilder WithContent(string json);
             IRequestJsonBodyBuilder WithContent(string key, string value);
+            IRequestJsonBodyBuilder WithSection(string section);
+            IRequestJsonBodyBuilder WithoutSection();
+            IRequestJsonBodyBuilder WithHeader(string key, string value);
+            IRequestJsonBodyBuilder WithParam(string key, string value);
+            IRequestJsonBodyBuilder WithLongRequest(); 
+            IRequestJsonBodyBuilder WithTimeout(int ms); 
         }
 
-        public interface IRequestFormBodyBuilder : IRequestBuilder
+        public interface IRequestFormBodyBuilder : IRequestBodyBuilder
         {
             IRequestFormBodyBuilder WithContent(string key, string value);
+            IRequestFormBodyBuilder WithSection(string section);
+            IRequestFormBodyBuilder WithoutSection();
+            IRequestFormBodyBuilder WithHeader(string key, string value);
+            IRequestFormBodyBuilder WithParam(string key, string value);
+            IRequestFormBodyBuilder WithLongRequest(); 
+            IRequestFormBodyBuilder WithTimeout(int ms); 
         }
 
-        public interface IRequestMultipartBodyBuilder : IRequestBuilder
+        public interface IRequestMultipartBodyBuilder : IRequestBodyBuilder
         {
             IRequestMultipartBodyBuilder WithContent(string key, string value);
             IRequestMultipartBodyBuilder WithStreamData(string key, string filePath, string fileName);
             IRequestMultipartBodyBuilder WithStreamData(string key, byte[] data, string fileName);
             IRequestMultipartBodyBuilder WithStreamData(string key, Stream content, string fileName);
+            IRequestMultipartBodyBuilder WithSection(string section);
+            IRequestMultipartBodyBuilder WithoutSection();
+            IRequestMultipartBodyBuilder WithHeader(string key, string value);
+            IRequestMultipartBodyBuilder WithParam(string key, string value);
+            IRequestMultipartBodyBuilder WithLongRequest(); 
+            IRequestMultipartBodyBuilder WithTimeout(int ms); 
         }
 
         private class RequestBodyHandleBuilder : IUrlBodyBuilder, IContentTypeBuilder,
@@ -96,14 +120,134 @@ namespace AceLand.WebRequest
                 return new RequestHandle(CreateBody(fingerprint));
             }
 
-            public IRequestBuilder WithLongRequest()
+            IRequestMultipartBodyBuilder IRequestMultipartBodyBuilder.WithSection(string section)
+            {
+                throw new NotImplementedException();
+            }
+
+            IRequestMultipartBodyBuilder IRequestMultipartBodyBuilder.WithoutSection()
+            {
+                throw new NotImplementedException();
+            }
+
+            IRequestMultipartBodyBuilder IRequestMultipartBodyBuilder.WithHeader(string key, string value)
+            {
+                throw new NotImplementedException();
+            }
+
+            IRequestMultipartBodyBuilder IRequestMultipartBodyBuilder.WithParam(string key, string value)
+            {
+                throw new NotImplementedException();
+            }
+
+            IRequestMultipartBodyBuilder IRequestMultipartBodyBuilder.WithLongRequest()
             {
                 _timeout = Settings.LongRequestTimeout;
                 return this;
             }
 
-            public IRequestBuilder WithTimeout(int ms)
+            IRequestMultipartBodyBuilder IRequestMultipartBodyBuilder.WithTimeout(int ms)
             {
+                if (ms < 0)
+                {
+                    Debug.LogWarning($"Timeout Ignored: {ms}ms is not accepted");
+                    return this;
+                }
+                
+                _timeout = ms;
+                return this;
+            }
+
+            IRequestFormBodyBuilder IRequestFormBodyBuilder.WithSection(string section)
+            {
+                _withoutSection = false;
+                if (!Settings.ContainSection(section))
+                    throw new Exception($"Section {section} is not contained in request builder");
+                
+                _section = section;
+                return this;
+            }
+
+            IRequestFormBodyBuilder IRequestFormBodyBuilder.WithoutSection()
+            {
+                _withoutSection = true;
+                _section = string.Empty;
+                return this;
+            }
+
+            IRequestFormBodyBuilder IRequestFormBodyBuilder.WithHeader(string key, string value)
+            {
+                AddHeader(key, value);
+                return this;
+            }
+
+            IRequestFormBodyBuilder IRequestFormBodyBuilder.WithParam(string key, string value)
+            {
+                AddParameter(key, value);
+                return this;
+            }
+
+            IRequestFormBodyBuilder IRequestFormBodyBuilder.WithLongRequest()
+            {
+                _timeout = Settings.LongRequestTimeout;
+                return this;
+            }
+
+            IRequestFormBodyBuilder IRequestFormBodyBuilder.WithTimeout(int ms)
+            {
+                if (ms < 0)
+                {
+                    Debug.LogWarning($"Timeout Ignored: {ms}ms is not accepted");
+                    return this;
+                }
+                
+                _timeout = ms;
+                return this;
+            }
+
+            IRequestJsonBodyBuilder IRequestJsonBodyBuilder.WithSection(string section)
+            {
+                _withoutSection = false;
+                if (!Settings.ContainSection(section))
+                    throw new Exception($"Section {section} is not contained in request builder");
+                
+                _section = section;
+                return this;
+            }
+
+            IRequestJsonBodyBuilder IRequestJsonBodyBuilder.WithoutSection()
+            {
+                _withoutSection = true;
+                _section = string.Empty;
+                return this;
+            }
+
+            IRequestJsonBodyBuilder IRequestJsonBodyBuilder.WithHeader(string key, string value)
+            {
+                AddHeader(key, value);
+                return this;
+            }
+
+            IRequestJsonBodyBuilder IRequestJsonBodyBuilder.WithParam(string key, string value)
+            {
+                AddParameter(key, value);
+                return this;
+            }
+
+            IRequestJsonBodyBuilder IRequestJsonBodyBuilder.WithLongRequest()
+            {
+                _timeout = Settings.LongRequestTimeout;
+                return this;
+            }
+
+            IRequestJsonBodyBuilder IRequestJsonBodyBuilder.WithTimeout(int ms)
+            {
+                if (ms < 0)
+                {
+                    Debug.LogWarning($"Timeout Ignored: {ms}ms is not accepted");
+                    return this;
+                }
+                
                 _timeout = ms;
                 return this;
             }
@@ -114,69 +258,22 @@ namespace AceLand.WebRequest
                 return this;
             }
 
-            public IRequestBuilder WithSection(string section)
-            {
-                _withoutSection = false;
-                if (!Settings.ContainSection(section))
-                    throw new Exception($"Section {section} is not contained in request builder");
-                
-                _section = section;
-                return this;
-            }
-
-            public IRequestBuilder WithoutSection()
-            {
-                _withoutSection = true;
-                _section = string.Empty;
-                return this;
-            }
-
-            public IRequestJsonBodyBuilder WithJsonBody()
+            public IRequestJsonBodyBuilder WithJsonContent()
             {
                 _dataType = DataType.Json;
                 return this;
             }
 
-            public IRequestFormBodyBuilder WithFormBody()
+            public IRequestFormBodyBuilder WithFormContent()
             {
                 _dataType = DataType.Form;
                 return this;
             }
 
-            public IRequestMultipartBodyBuilder WithMultipartBody()
+            public IRequestMultipartBodyBuilder WithMultipartContent()
             {
                 _dataType = DataType.Multipart;
                 return this;
-            }
-
-            public IRequestBuilder WithHeader(string key, string value)
-            {
-                AddHeader(key, value);
-                return this;
-            }
-
-            private void AddHeader(string key, string value)
-            {
-                if (_headers.AsValueEnumerable()
-                    .Any(header => header.Key == key))
-                    return;
-
-                _bodyData.Add(new FormData(key, value));
-            }
-
-            public IRequestBuilder WithParam(string key, string value)
-            {
-                AddParameter(key, value);
-                return this;
-            }
-
-            private void AddParameter(string key, string value)
-            {
-                if (_parameters.AsValueEnumerable()
-                    .Any(param => param.Key == key))
-                    return;
-
-                _bodyData.Add(new FormData(key, value));
             }
 
             IRequestJsonBodyBuilder IRequestJsonBodyBuilder.WithContent(string json)
@@ -286,6 +383,24 @@ namespace AceLand.WebRequest
                     default:
                         throw new ArgumentOutOfRangeException();
                 }
+            }
+
+            private void AddHeader(string key, string value)
+            {
+                if (_headers.AsValueEnumerable()
+                    .Any(header => header.Key == key))
+                    return;
+
+                _bodyData.Add(new FormData(key, value));
+            }
+
+            private void AddParameter(string key, string value)
+            {
+                if (_parameters.AsValueEnumerable()
+                    .Any(param => param.Key == key))
+                    return;
+
+                _bodyData.Add(new FormData(key, value));
             }
         }
     }
