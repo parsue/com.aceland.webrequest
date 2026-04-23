@@ -4,10 +4,12 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using AceLand.Disposable;
+using AceLand.EventDriven.Bus;
 using AceLand.ProjectSetting;
 using AceLand.Serialization.Json;
 using AceLand.TaskUtils;
 using AceLand.WebRequest.Core;
+using AceLand.WebRequest.Events;
 using AceLand.WebRequest.Exceptions;
 using AceLand.WebRequest.ProjectSetting;
 using Newtonsoft.Json;
@@ -112,22 +114,46 @@ namespace AceLand.WebRequest.Handle
 
                             var httpStatusCode = Response.StatusCode;
 
-                            if (httpStatusCode is >= HttpStatusCode.InternalServerError or
-                                HttpStatusCode.TooManyRequests)
+                            switch (httpStatusCode)
                             {
-                                // Retry for server errors (5xx) and rate limiting (429)
-                                throw new HttpServerErrorException(httpStatusCode, response);
+                                // server errors (5xx) and rate limiting (429)
+                                case HttpStatusCode.InternalServerError: 
+                                case HttpStatusCode.TooManyRequests:
+                                    var seEx = new ServerErrorException(httpStatusCode, response);
+                                    EventBus.Event<IServerErrorEvent>().WithData(seEx).Raise();
+                                    throw seEx;
+                                
+                                case HttpStatusCode.BadRequest:
+                                    throw new BadRequestException(response);
+                                
+                                case HttpStatusCode.Unauthorized:
+                                    var uEx = new UnauthorizedException(response);
+                                    EventBus.Event<IUnauthorizedEvent>().WithData(uEx).Raise();
+                                    throw uEx;
+                                
+                                case HttpStatusCode.NotFound:
+                                    throw new NotFoundException(response);
+                                
+                                // Throw an exception for other HTTP errors
+                                default:
+                                    throw new HttpErrorException(httpStatusCode, response);
                             }
-
-                            // Throw an exception for other HTTP errors (4xx)
-                            throw new HttpErrorException(httpStatusCode, response);
                         }
                         catch (HttpRequestException ex)
                         {
-                            if (Settings.LoggingLevel.IsAcceptedLevel())
-                                Debug.LogWarning($"Request failed: {ex.Message}\n" +
-                                                 $"Exception: {ex}");
-                            throw;
+                            if (ex.InnerException is WebException we)
+                            {
+                                retryException = we;
+                                await HandleRetry(attempt);
+                            }
+                            else
+                            {
+                                if (Settings.LoggingLevel.IsAcceptedLevel())
+                                    Debug.LogWarning($"Request failed: {ex.Message}\n" +
+                                                     $"Exception: {ex}");
+                            
+                                throw ex.InnerException ?? ex;
+                            }
                         }
                         catch (WebException ex)
                         {
@@ -177,7 +203,8 @@ namespace AceLand.WebRequest.Handle
                     if (Settings.LoggingLevel.IsAcceptedLevel())
                         Debug.LogError($"Max retries reached. Request failed due to: {msg}\n" +
                                        $"Exception: {retryException}");
-
+                    
+                    EventBus.Event<IConnectionErrorEvent>().WithData(retryException).Raise();
                     throw retryException;
                 },
                 LinkedToken

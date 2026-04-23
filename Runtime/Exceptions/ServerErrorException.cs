@@ -3,16 +3,16 @@ using System.Net;
 
 namespace AceLand.WebRequest.Exceptions
 {
-    public class HttpErrorException : Exception
+    public class ServerErrorException : Exception
     {
-        public HttpErrorException(HttpStatusCode statusCode, string body)
+        public ServerErrorException(HttpStatusCode statusCode, string body)
             : base($"HTTP {(int)statusCode} {statusCode}")
         {
             StatusCode = statusCode;
             ResponseBody = body;
         }
         
-        public HttpErrorException(HttpStatusCode statusCode, string body, Exception inner)
+        public ServerErrorException(HttpStatusCode statusCode, string body, Exception inner)
             : base($"HTTP {(int)statusCode} {statusCode}", inner)
         {
             StatusCode = statusCode;
