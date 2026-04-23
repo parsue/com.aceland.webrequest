@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [2.4.0] - 2026-04-23
+### Added
+- [Exception] add exceptions for 400, 401 and 404
+- [Event] raise event on connection error, server error and unauthorized (401)
+
 ## [2.3.1] - 2026-03-12
 ### Fixed
 - [Request Handle] fix handle empty response from service issue
