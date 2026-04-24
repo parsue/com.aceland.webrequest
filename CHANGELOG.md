@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [2.4.2] - 2026-04-24
+### Modified
+- implement with EventDriven 2.5.1
+- [Request Handle] Event will be raised without cache
+
 ## [2.4.1] - 2026-04-23
 ### Modified
 - [Request Builder] more flexible on building request with body content
