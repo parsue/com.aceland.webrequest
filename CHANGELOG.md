@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [2.4.3] - 2026-04-24
+### Fixed
+- [Event] pass event to main thread to prevent unity main thread issue
+
 ## [2.4.2] - 2026-04-24
 ### Modified
 - implement with EventDriven 2.5.1

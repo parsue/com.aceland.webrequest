@@ -120,7 +120,7 @@ namespace AceLand.WebRequest.Handle
                                 case HttpStatusCode.InternalServerError: 
                                 case HttpStatusCode.TooManyRequests:
                                     var seEx = new ServerErrorException(httpStatusCode, response);
-                                    EventBus.Event<IServerErrorEvent>().WithData(seEx).RaiseWithoutCache();
+                                    Promise.Dispatcher.Run(EventBus.Event<IServerErrorEvent>().WithData(seEx).RaiseWithoutCache);
                                     throw seEx;
                                 
                                 case HttpStatusCode.BadRequest:
@@ -128,7 +128,7 @@ namespace AceLand.WebRequest.Handle
                                 
                                 case HttpStatusCode.Unauthorized:
                                     var uEx = new UnauthorizedException(response);
-                                    EventBus.Event<IUnauthorizedEvent>().WithData(uEx).RaiseWithoutCache();
+                                    Promise.Dispatcher.Run(EventBus.Event<IUnauthorizedEvent>().WithData(uEx).RaiseWithoutCache);
                                     throw uEx;
                                 
                                 case HttpStatusCode.NotFound:
@@ -204,7 +204,7 @@ namespace AceLand.WebRequest.Handle
                         Debug.LogError($"Max retries reached. Request failed due to: {msg}\n" +
                                        $"Exception: {retryException}");
                     
-                    EventBus.Event<IConnectionErrorEvent>().WithData(retryException).RaiseWithoutCache();
+                    Promise.Dispatcher.Run(EventBus.Event<IConnectionErrorEvent>().WithData(retryException).RaiseWithoutCache);
                     throw retryException;
                 },
                 LinkedToken
