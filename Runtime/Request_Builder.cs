@@ -10,15 +10,13 @@ namespace AceLand.WebRequest
     {
         public interface IUrlBuilder
         {
+            IUrlBuilder WithoutSection();
             IRequestBuilder WithUrl(string url);
         }
-        
         
         public interface IRequestBuilder
         {
             IRequestHandle Build();
-            IRequestBuilder WithSection(string section);
-            IRequestBuilder WithoutSection();
             IRequestBuilder WithHeader(string key, string value);
             IRequestBuilder WithParam(string key, string value);
             IRequestBuilder WithLongRequest(); 
@@ -33,37 +31,37 @@ namespace AceLand.WebRequest
             }
 
             private bool _withoutSection;
-            private string _section = string.Empty;
             private string _url = string.Empty;
             private readonly JsonBody _body = new();
 
             public IRequestHandle Build()
             {
-                if (!_withoutSection)
-                    _section = Settings.DefaultSection;
-                
-                Settings.TryGetSection(_section, out var section);
-                if (_withoutSection) section = null;
-                
-                if (section && !_url.StartsWith("http"))
-                    _url = section.ApiUrl + _url;
+                var section = _withoutSection ? null : Settings.DefaultSection;
+                if (!_withoutSection && !section)
+                    throw new Exception("API Section is net specified.");
 
-                if (!CheckUrl(_url))
-                    throw new Exception($"Invalid Url : {_url}");
+                if (section && !Uri.TryCreate(_url, UriKind.Absolute, out _))
+                    _url = section.ApiUrl + _url;
                 
+                if (!CheckUrl(_url))
+                    throw new Exception($"Forced HTTPs Scheme check fail: {_url}");
+
                 _body.Url = _url;
 
-                var headers = GetHeader(section == null ? null : section.SectionName);
-                foreach (var header in headers)
+                if (!_withoutSection)
                 {
-                    if (_body.Headers.AsValueEnumerable().Any(h => h.Key == header.Key)) continue;
-                    _body.Headers.Add(header);
+                    var headers = GetHeader().AsValueEnumerable()
+                        .Where(header => !_body.Headers.AsValueEnumerable().Any(h => h.Key == header.Key))
+                        .ToList();
+                    _body.Headers.AddRange(headers);
                 }
                 
                 if (_body.Timeout <= 0)
                     _body.Timeout = Settings.RequestTimeout;
-
-                _body.Fingerprint = _withoutSection ? null : section.RootCaFingerprint;
+                
+                _body.Fingerprint = _withoutSection
+                    ? null
+                    : section.RootCaFingerprint;
                 
                 return new RequestHandle(_body);
             }
@@ -95,20 +93,9 @@ namespace AceLand.WebRequest
                 return this;
             }
 
-            public IRequestBuilder WithSection(string section)
-            {
-                _withoutSection = false;
-                if (!Settings.ContainSection(section))
-                    throw new Exception($"Section {section} is not contained in request builder");
-                
-                _section = section;
-                return this;
-            }
-
-            public IRequestBuilder WithoutSection()
+            public IUrlBuilder WithoutSection()
             {
                 _withoutSection = true;
-                _section = string.Empty;
                 return this;
             }
 

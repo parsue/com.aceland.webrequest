@@ -85,7 +85,7 @@ namespace AceLand.WebRequest
             Debug.Log(msg);
         }
 
-        private static List<FormData> GetHeader(string sectionName = null)
+        private static List<FormData> GetHeader()
         {
             var headers = new List<FormData>();
             
@@ -95,11 +95,11 @@ namespace AceLand.WebRequest
                 headers.Add(new FormData(Settings.TimeKey, time));
             }
             
-            var headerList = string.IsNullOrEmpty(sectionName)
-                ? Settings.DefaultHeaders()
-                : Settings.SectionHeaders(sectionName);
+            var headerList = Settings.DefaultHeaders()
+                .AsValueEnumerable()
+                .Where(h => !h.IsEmpty);
             
-            foreach (var header in headerList.AsValueEnumerable().Where(h => !h.IsEmpty))
+            foreach (var header in headerList)
                 headers.Add(new FormData(header.Key, header.Value));
 
             return headers;

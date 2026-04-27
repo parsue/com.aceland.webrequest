@@ -1,19 +1,13 @@
-using System.Collections.Generic;
-using AceLand.WebRequest.ProjectSetting;
+using AceLand.WebRequest.Profiles;
 
 namespace AceLand.WebRequest
 {
     public static partial class Request
     {
-        public static string DefaultSection => 
+        public static ApiSectionsProfile DefaultSection =>
             Settings.DefaultSection;
+        
         public static string DefaultApiUrl => 
-            Settings.DefaultApiUrl;
-        public static string SectionApiUrl(string sectionName) =>
-            Settings.SectionApiUrl(sectionName);
-        public static IEnumerable<HeaderData> DefaultHeaders => 
-            Settings.DefaultHeaders();
-        public static IEnumerable<HeaderData> SectionHeaders(string sectionName) =>
-            Settings.SectionHeaders(sectionName);
+            Settings.DefaultSection.ApiUrl;
     }
 }

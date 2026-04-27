@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using AceLand.ProjectSetting;
 using AceLand.WebRequest.Profiles;
 using UnityEngine;
-using ZLinq;
 
 namespace AceLand.WebRequest.ProjectSetting
 {
@@ -25,44 +24,19 @@ namespace AceLand.WebRequest.ProjectSetting
         [SerializeField] private int requestRetry = 3;
         [SerializeField] private int[] retryInterval = { 400, 800, 1600, 3200, 6400, 12800, 25600 };
 
+#if UNITY_EDITOR
         [SerializeField] private ApiSectionsProfile[] apiSections = Array.Empty<ApiSectionsProfile>();
+#endif
 
         [SerializeField] private ApiSectionsProfile defaultApiSection;
 
-        public string DefaultSection => defaultApiSection.SectionName;
-        public string DefaultApiUrl => defaultApiSection.ApiUrl;
-
-        public bool ContainSection(string sectionName) => apiSections.AsValueEnumerable()
-            .Any(s => s.SectionName == sectionName);
-
-        public bool TryGetSection(string sectionName, out ApiSectionsProfile section)
-        {
-            section = apiSections.AsValueEnumerable()
-                .FirstOrDefault(s => s.SectionName == sectionName);
-            return section != null;
-        }
-        public string SectionApiUrl(string sectionName)
-        {
-            var section = apiSections.AsValueEnumerable()
-                .FirstOrDefault(s => s.SectionName == sectionName);
-            if (section == null) throw new KeyNotFoundException($"Section {sectionName} does not exist.");
-            return section == null ? string.Empty : section.ApiUrl;
-        }
-        public IEnumerable<HeaderData> DefaultHeaders()
+        internal ApiSectionsProfile DefaultSection => defaultApiSection;
+        
+        internal IEnumerable<HeaderData> DefaultHeaders()
         {
             foreach (var header in autoFillHeaders)
                 yield return header;
             foreach (var header in defaultApiSection.Headers)
-                yield return header;
-        }
-        public IEnumerable<HeaderData> SectionHeaders(string sectionName)
-        {
-            foreach (var header in autoFillHeaders)
-                yield return header;
-            var section = apiSections.AsValueEnumerable()
-                .FirstOrDefault(s => s.SectionName == sectionName);
-            if (section == null) yield break;
-            foreach (var header in section.Headers)
                 yield return header;
         }
         

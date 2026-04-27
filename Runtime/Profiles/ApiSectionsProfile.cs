@@ -32,7 +32,7 @@ namespace AceLand.WebRequest.Profiles
 
         private void OnEnable()
         {
-            sectionName = this.name;
+            sectionName = name;
         }
 
         private void OnValidate()
