@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [2.4.4] - 2026-04-27
+### Fixed
+- [Project Settings] Security Issue. API Sections will not be built now. Only default section profile will be included in build version.
+### Removed
+- [Request Builder] WithSection is not allowed.
+
 ## [2.4.3] - 2026-04-24
 ### Fixed
 - [Event] pass event to main thread to prevent unity main thread issue
