@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [2.4.5] - 2026-05-04
+### Fixed
+- [Request Builder] json content build exception.
+
 ## [2.4.4] - 2026-04-27
 ### Fixed
 - [Project Settings] Security Issue. API Sections will not be built now. Only default section profile will be included in build version.
