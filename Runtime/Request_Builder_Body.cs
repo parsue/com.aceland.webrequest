@@ -252,7 +252,9 @@ namespace AceLand.WebRequest
 
                 if (_jsonBody.IsNullOrEmptyOrWhiteSpace())
                 {
-                    _jsonBody = $"{{\"{key}\":\"{value}\"}}";
+                    var newItems = new Dictionary<string, object>();
+                    newItems[key] = value;
+                    _jsonBody = newItems.ToJson().Text;
                     return this;
                 }
 
