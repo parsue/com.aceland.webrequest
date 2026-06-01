@@ -4,9 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ---
 
-## [2.4.6] - 2026-06-01
+## [2.4.7] - 2026-06-01
 ### Fixed
 - [Request Builder] multipart content build exception.
+- [Request Builder] headers and params built to wrong part.
 
 ## [2.4.5] - 2026-05-04
 ### Fixed
