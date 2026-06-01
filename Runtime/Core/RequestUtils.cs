@@ -62,12 +62,16 @@ namespace AceLand.WebRequest.Core
 
             return (client, content);
         }
-        
+
         private static HttpClient CreateHttpClient(string fingerprint)
         {
             if (fingerprint.IsNullOrEmptyOrWhiteSpace()) return new HttpClient();
-            
-            var handler = new HttpClientHandler();
+
+            var handler = new HttpClientHandler()
+            {
+                CookieContainer = CookieHandler.Container,
+                UseCookies = true,
+            };
             handler.ServerCertificateCustomValidationCallback = (sender, cert, chain, sslPolicyErrors) =>
             {
                 if (sslPolicyErrors == SslPolicyErrors.None) return true;
