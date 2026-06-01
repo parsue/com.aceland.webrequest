@@ -72,6 +72,9 @@ namespace AceLand.WebRequest.Handle
 
         public Task<JToken> Send()
         {
+            if (LinkedTokenSource == null || LinkedTokenSource.IsCancellationRequested)
+                RenewLinkedTokenSource();
+
             Request.PrintRequestLog(Body);
 
             return Task.Run(async () =>
