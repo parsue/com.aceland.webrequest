@@ -4,11 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ---
 
-## [2.4.9] - 2026-06-01
+## [2.4.10] - 2026-06-01
 ### Added
 - [CookieContainer] api to get CookieContainer (seem not supported in Unity)
 - [GetCookie] api to get latest cookie
 ### Fixed
+- [Request Handle] null exception on Sent without T
 - [Request Handle] shared HttpClient to solve Socket Exhaustion issue
 - [Request Handle] default use Cookies
 - [Request Builder] multipart content build exception.
