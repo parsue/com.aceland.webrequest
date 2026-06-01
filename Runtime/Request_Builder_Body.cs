@@ -273,7 +273,7 @@ namespace AceLand.WebRequest
 
             IRequestMultipartBodyBuilder IRequestMultipartBodyBuilder.WithContent(string key, string value)
             {
-                _headers.Add(new FormData(key, value));
+                _bodyData.Add(new FormData(key, value));
                 return this;
             }
 
@@ -340,7 +340,7 @@ namespace AceLand.WebRequest
                         multipartBody.Body.AddRange(_bodyData);
                         multipartBody.StreamData.AddRange(_streamData);
                         multipartBody.Fingerprint = fingerprint;
-                        return null;
+                        return multipartBody;
                     default:
                         throw new ArgumentOutOfRangeException();
                 }
