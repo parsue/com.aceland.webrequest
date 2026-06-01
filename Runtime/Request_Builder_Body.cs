@@ -352,7 +352,7 @@ namespace AceLand.WebRequest
                     .Any(header => header.Key == key))
                     return;
 
-                _bodyData.Add(new FormData(key, value));
+                _headers.Add(new FormData(key, value));
             }
 
             private void AddParameter(string key, string value)
@@ -361,7 +361,7 @@ namespace AceLand.WebRequest
                     .Any(param => param.Key == key))
                     return;
 
-                _bodyData.Add(new FormData(key, value));
+                _parameters.Add(new FormData(key, value));
             }
         }
     }
