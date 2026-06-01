@@ -1,5 +1,3 @@
-using System;
-
 namespace AceLand.WebRequest.Core
 {
     internal interface IRequestBody

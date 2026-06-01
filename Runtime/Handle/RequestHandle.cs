@@ -22,19 +22,9 @@ namespace AceLand.WebRequest.Handle
     {
         public RequestHandle(IRequestBody body)
         {
-            var (client, content) = body.GetType() switch
-            {
-                { } t when t == typeof(JsonBody) => RequestUtils.CreateWebRequest((JsonBody)body, body.Fingerprint),
-                { } t when t == typeof(FormBody) => RequestUtils.CreateWebRequest((FormBody)body, body.Fingerprint),
-                { } t when t == typeof(MultipartBody) => RequestUtils.CreateWebRequest((MultipartBody)body, body.Fingerprint),
-                _ => throw new Exception("Unknown type of data")
-            };
-            
-            Client = client;
-            Content = content;
+            Client = RequestUtils.GetOrCreateHttpClient();
+            RequestMessage = RequestUtils.CreateRequestMessage(body);
             Body = body;
-            TokenSource = new CancellationTokenSource();
-            RenewLinkedTokenSource();
         }
 
         ~RequestHandle() => Dispose(false);
@@ -43,8 +33,7 @@ namespace AceLand.WebRequest.Handle
         {
             LinkedTokenSource?.Dispose();
             TokenSource?.Dispose();
-            Client?.Dispose();
-            Content?.Dispose();
+            RequestMessage?.Dispose();
             Body.Dispose();
         }
 
@@ -53,9 +42,9 @@ namespace AceLand.WebRequest.Handle
         public HttpResponseMessage Response { get; private set; }
         public JToken Result { get; private set; }
         private HttpClient Client { get; }
-        private HttpContent Content { get; }
+        private HttpRequestMessage RequestMessage { get; set; }
         private IRequestBody Body { get; }
-        private CancellationTokenSource TokenSource { get; }
+        private CancellationTokenSource TokenSource { get; set; }
         private CancellationTokenSource LinkedTokenSource { get; set; }
         private CancellationToken LinkedToken => LinkedTokenSource.Token;
 
@@ -69,6 +58,8 @@ namespace AceLand.WebRequest.Handle
 
         public Task<T> Send<T>()
         {
+            RenewLinkedTokenSource();
+
             return Task.Run(async () =>
                 {
                     var result = await Send();
@@ -89,15 +80,7 @@ namespace AceLand.WebRequest.Handle
                     {
                         try
                         {
-                            Response = Body.RequestMethod switch
-                            {
-                                RequestMethod.Post => await Client.PostAsync(Body.Url, Content, LinkedToken),
-                                RequestMethod.Get => await Client.GetAsync(Body.Url, LinkedToken),
-                                RequestMethod.Put => await Client.PutAsync(Body.Url, Content, LinkedToken),
-                                RequestMethod.Delete => await Client.DeleteAsync(Body.Url, LinkedToken),
-                                RequestMethod.Patch => await Client.PatchAsync(Body.Url, Content, LinkedToken),
-                                _ => throw new ArgumentOutOfRangeException()
-                            };
+                            Response = await Client.SendAsync(RequestMessage, LinkedToken);
 
                             var response = await Response.Content.ReadAsStringAsync();
                             var jsonResponse = response.IsValidJson()
@@ -106,6 +89,12 @@ namespace AceLand.WebRequest.Handle
                             
                             if (Response.IsSuccessStatusCode)
                             {
+                                if (Response.Headers.TryGetValues("Set-Cookie", out var cookieValues))
+                                {
+                                    var cookie = string.Join("; ", cookieValues);
+                                    Request.SetRawCookie(cookie);
+                                }
+                                
                                 Result = JToken.Parse(jsonResponse);
                                 Request.PrintSuccessLog(Body, Result);
 
@@ -220,11 +209,19 @@ namespace AceLand.WebRequest.Handle
                                  $"{retryException.Message}. Retry after {retryInterval} ms...\n" +
                                  $"Exception:\n{retryException}");
             
+            RequestMessage?.Dispose();
+            
             await Task.Delay(retryInterval, LinkedToken);
+            
+            RequestMessage = RequestUtils.CreateRequestMessage(Body);
         }
 
         private void RenewLinkedTokenSource()
         {
+            TokenSource?.Dispose();
+            TokenSource = new CancellationTokenSource();
+            TokenSource.CancelAfter(TimeSpan.FromMilliseconds(Body.Timeout));
+            
             LinkedTokenSource?.Dispose();
             Promise.LinkedOrApplicationAliveToken(TokenSource, out var source);
             LinkedTokenSource = source;
