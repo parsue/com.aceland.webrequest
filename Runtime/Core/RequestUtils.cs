@@ -51,6 +51,9 @@ namespace AceLand.WebRequest.Core
         public static HttpRequestMessage CreateRequestMessage(IRequestBody body)
         {
             var requestMsg = new HttpRequestMessage(body.RequestMethod.ToHttpMethod(), body.Url);
+                        
+            if (body.RequestMethod is RequestMethod.Get) return requestMsg;
+            
             return body.GetType() switch
             {
                 { } t when t == typeof(JsonBody) => CreateWebRequest(requestMsg, (JsonBody)body),
