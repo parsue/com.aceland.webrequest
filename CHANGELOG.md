@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [2.4.11] - 2026-06-04
+### Fixed
+- [Request Handle] GET will not have content-body anymore
+
 ## [2.4.10] - 2026-06-01
 ### Added
 - [CookieContainer] api to get CookieContainer (seem not supported in Unity)
