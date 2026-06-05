@@ -25,6 +25,7 @@ namespace AceLand.WebRequest.Handle
             Client = RequestUtils.GetOrCreateHttpClient();
             RequestMessage = RequestUtils.CreateRequestMessage(body);
             Body = body;
+            TokenSource = new CancellationTokenSource();
         }
 
         ~RequestHandle() => Dispose(false);
@@ -221,8 +222,6 @@ namespace AceLand.WebRequest.Handle
 
         private void RenewLinkedTokenSource()
         {
-            TokenSource?.Dispose();
-            TokenSource = new CancellationTokenSource();
             TokenSource.CancelAfter(TimeSpan.FromMilliseconds(Body.Timeout));
             
             LinkedTokenSource?.Dispose();
