@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [2.4.13] - 2026-06-08
+### Fixed
+- [Request Handle] timeout without exception issue
+
 ## [2.4.12] - 2026-06-05
 ### Fixed
 - [Request Handle] do not retry issue
