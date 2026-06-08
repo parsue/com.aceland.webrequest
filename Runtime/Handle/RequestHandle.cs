@@ -200,7 +200,7 @@ namespace AceLand.WebRequest.Handle
                     Promise.Dispatcher.Run(EventBus.Event<IConnectionErrorEvent>().WithData(retryException).RaiseWithoutCache);
                     throw retryException;
                 },
-                LinkedToken
+                Promise.ApplicationAliveToken
             );
         }
 
@@ -224,9 +224,9 @@ namespace AceLand.WebRequest.Handle
         {
             TokenSource.CancelAfter(TimeSpan.FromMilliseconds(Body.Timeout));
             
-            LinkedTokenSource?.Dispose();
-            Promise.LinkedOrApplicationAliveToken(TokenSource, out var source);
-            LinkedTokenSource = source;
+            // LinkedTokenSource?.Dispose();
+            // Promise.LinkedOrApplicationAliveToken(TokenSource, out var source);
+            // LinkedTokenSource = source;
         }
     }
 }
