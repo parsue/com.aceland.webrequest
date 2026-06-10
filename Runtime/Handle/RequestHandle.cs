@@ -203,6 +203,7 @@ namespace AceLand.WebRequest.Handle
             Request.PrintRetryLog(Body, attempt, retryInterval, retryException);
             
             RequestMessage?.Dispose();
+            TokenSource.CancelAfter(retryInterval + 500);
             
             await Task.Delay(retryInterval, LinkedToken);
             
