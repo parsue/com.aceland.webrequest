@@ -7,6 +7,8 @@ namespace AceLand.WebRequest.Core
 {
     internal abstract class RequestBody : DisposableObject, IRequestBody
     {
+        protected RequestBody(DataType dataType) => DataType = dataType;
+        
         ~RequestBody()
         {
             Dispose(false);
@@ -18,7 +20,7 @@ namespace AceLand.WebRequest.Core
         }
         
         public RequestMethod RequestMethod { get; internal set; }
-        public DataType DataType => DataType.Json;
+        public DataType DataType { get; }
 
         public string Url
         {

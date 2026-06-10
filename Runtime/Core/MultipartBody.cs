@@ -4,6 +4,8 @@ namespace AceLand.WebRequest.Core
 {
     internal class MultipartBody : RequestBody
     {
+        public MultipartBody() : base(DataType.Multipart) {}
+        
         protected override void DisposeManagedResources()
         {
             base.DisposeManagedResources();

@@ -4,6 +4,8 @@ namespace AceLand.WebRequest.Core
 {
     internal class FormBody : RequestBody
     {
+        public FormBody() : base(DataType.Form) {}
+        
         protected override void DisposeManagedResources()
         {
             base.DisposeManagedResources();

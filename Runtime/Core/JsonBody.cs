@@ -2,6 +2,8 @@ namespace AceLand.WebRequest.Core
 {
     internal class JsonBody : RequestBody
     {
+        public JsonBody() : base(DataType.Json) {}
+        
         protected override void DisposeManagedResources()
         {
             base.DisposeManagedResources();
