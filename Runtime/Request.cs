@@ -44,10 +44,12 @@ namespace AceLand.WebRequest
             var url = Settings.FullLoggingLevel.IsAcceptedLevel()
                 ? body.Url
                 : ShortenUrl(body.Url);
+            
             var fullContent = Settings.FullLoggingLevel.IsAcceptedLevel()
                 ? $"\n>>> Header:\n{body.HeaderText()}\n>>> Body:\n{body.BodyText()}"
                 : string.Empty;
-            var msg = body.RequestMethod is RequestMethod.Get or RequestMethod.Delete
+            
+            var msg = body.RequestMethod is not RequestMethod.Post
                 ? $"Send Request: {body.RequestMethod} || {url}\n" +
                   $">>> Timeout: {body.Timeout} ms" +
                   fullContent
@@ -66,8 +68,9 @@ namespace AceLand.WebRequest
             var url = Settings.FullLoggingLevel.IsAcceptedLevel()
                 ? body.Url
                 : ShortenUrl(body.Url);
+            
             var msg = $"Request Success: {body.RequestMethod} || {url}";
-            if (Settings.ResultLoggingLevel.IsAcceptedLevel())
+            if (Settings.FullLoggingLevel.IsAcceptedLevel())
                 msg += $"\n{response}";
             
             Debug.Log(msg);
@@ -82,8 +85,8 @@ namespace AceLand.WebRequest
                 ? body.Url
                 : ShortenUrl(body.Url);
             
-            Debug.LogWarning($"Connection error on attempt {attempt}: " +
-                             $"{exception.Message}. Retry after {retryInterval} ms...\n" +
+            Debug.LogWarning($"Connection error on attempt {attempt}: {exception.Message}. " +
+                             $"Retry after {retryInterval} ms...\n" +
                              $"url: {url}" +
                              $"Exception:\n{exception}");
         }
@@ -96,6 +99,7 @@ namespace AceLand.WebRequest
             var url = Settings.FullLoggingLevel.IsAcceptedLevel()
                 ? body.Url
                 : ShortenUrl(body.Url);
+            
             var msg = $"Request Fail: {body.RequestMethod} || {url}";
             if (Settings.ResultLoggingLevel.IsAcceptedLevel())
                 msg += $"\n{exception}";
