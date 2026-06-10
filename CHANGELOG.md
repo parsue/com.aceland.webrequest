@@ -4,13 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ---
 
-## [2.4.17] - 2026-06-10
+## [2.4.18] - 2026-06-10
 ### Modified
 - [Request Handle] arrange log printing
 ### Fixed
 - [Request] success log always show full result issue
 - [Request] wrong content data type issue
-- [Request Handle] timeout not reset on retry connecting issue
+- [Request Handle] timeout not reset on waiting retry connection
 
 ## [2.4.13] - 2026-06-08
 ### Fixed
