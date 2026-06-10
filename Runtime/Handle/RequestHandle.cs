@@ -5,7 +5,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using AceLand.Disposable;
 using AceLand.EventDriven.Bus;
-using AceLand.ProjectSetting;
 using AceLand.Serialization.Json;
 using AceLand.TaskUtils;
 using AceLand.WebRequest.Core;
@@ -14,7 +13,6 @@ using AceLand.WebRequest.Exceptions;
 using AceLand.WebRequest.ProjectSetting;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using UnityEngine;
 
 namespace AceLand.WebRequest.Handle
 {
@@ -113,19 +111,25 @@ namespace AceLand.WebRequest.Handle
                                 case HttpStatusCode.InternalServerError: 
                                 case HttpStatusCode.TooManyRequests:
                                     var seEx = new ServerErrorException(httpStatusCode, response);
+                                    Request.PrintFailLog(Body, seEx);
                                     Promise.Dispatcher.Run(EventBus.Event<IServerErrorEvent>().WithData(seEx).RaiseWithoutCache);
                                     throw seEx;
                                 
                                 case HttpStatusCode.BadRequest:
-                                    throw new BadRequestException(response);
+                                    var brEx = new BadRequestException(response);
+                                    Request.PrintFailLog(Body, brEx);
+                                    throw brEx;
                                 
                                 case HttpStatusCode.Unauthorized:
                                     var uEx = new UnauthorizedException(response);
+                                    Request.PrintFailLog(Body, uEx);
                                     Promise.Dispatcher.Run(EventBus.Event<IUnauthorizedEvent>().WithData(uEx).RaiseWithoutCache);
                                     throw uEx;
                                 
                                 case HttpStatusCode.NotFound:
-                                    throw new NotFoundException(response);
+                                    var nfEx = new NotFoundException(response);
+                                    Request.PrintFailLog(Body, nfEx);
+                                    throw nfEx;
                                 
                                 // Throw an exception for other HTTP errors
                                 default:
@@ -141,10 +145,7 @@ namespace AceLand.WebRequest.Handle
                             }
                             else
                             {
-                                if (Settings.LoggingLevel.IsAcceptedLevel())
-                                    Debug.LogWarning($"Request failed: {ex.Message}\n" +
-                                                     $"Exception: {ex}");
-                            
+                                Request.PrintFailLog(Body, ex);
                                 throw ex.InnerException ?? ex;
                             }
                         }
@@ -158,14 +159,13 @@ namespace AceLand.WebRequest.Handle
                             // Check if the cancellation was user-initiated
                             if (LinkedToken.IsCancellationRequested)
                             {
-                                if (Settings.LoggingLevel.IsAcceptedLevel())
-                                    Debug.LogWarning("Request failed: canceled by user\n" +
-                                                     $"Exception: {ex}");
-                                throw new OperationCanceledException(
+                                var ocEx = new OperationCanceledException(
                                     "The request was canceled by the user.",
                                     ex,
                                     LinkedToken
                                 );
+                                Request.PrintFailLog(Body, ocEx);
+                                throw ocEx;
                             }
                             
                             retryException = new WebException("Canceled by Connection Error", ex);
@@ -173,9 +173,7 @@ namespace AceLand.WebRequest.Handle
                         }
                         catch (JsonReaderException ex)
                         {
-                            if (Settings.LoggingLevel.IsAcceptedLevel())
-                                Debug.LogError($"Json Parse Fail: {ex.Message}\n" +
-                                               $"Exception: {ex}");
+                            Request.PrintFailLog(Body, ex);
                             throw;
                         }
                         catch (Exception ex)
@@ -184,19 +182,13 @@ namespace AceLand.WebRequest.Handle
                             if (e != null) throw e;
                             
                             // For non-retryable errors, rethrow immediately
-                            if (Settings.LoggingLevel.IsAcceptedLevel())
-                                Debug.LogError($"Request failed: {ex.Message}\n" +
-                                               $"Exception: {ex}");
+                            Request.PrintFailLog(Body, ex);
                             throw new Exception($"Request failed: {ex.Message}", ex);
                         }
                     }
 
                     // Handle connection-related errors
-                    var msg = retryException.Message;
-                    if (Settings.LoggingLevel.IsAcceptedLevel())
-                        Debug.LogError($"Max retries reached. Request failed due to: {msg}\n" +
-                                       $"Exception: {retryException}");
-                    
+                    Request.PrintFailLog(Body, retryException);
                     Promise.Dispatcher.Run(EventBus.Event<IConnectionErrorEvent>().WithData(retryException).RaiseWithoutCache);
                     throw retryException;
                 },
@@ -208,10 +200,7 @@ namespace AceLand.WebRequest.Handle
         {
             var retryInterval = Settings.GetRetryInterval(attempt);
             
-            if (Settings.LoggingLevel.IsAcceptedLevel())
-                Debug.LogWarning($"Connection error on attempt {attempt}: " +
-                                 $"{retryException.Message}. Retry after {retryInterval} ms...\n" +
-                                 $"Exception:\n{retryException}");
+            Request.PrintRetryLog(Body, attempt, retryInterval, retryException);
             
             RequestMessage?.Dispose();
             

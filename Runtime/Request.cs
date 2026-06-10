@@ -69,10 +69,27 @@ namespace AceLand.WebRequest
             var msg = $"Request Success: {body.RequestMethod} || {url}";
             if (Settings.ResultLoggingLevel.IsAcceptedLevel())
                 msg += $"\n{response}";
+            
             Debug.Log(msg);
         }
+
+        internal static void PrintRetryLog<T>(IRequestBody body, int attempt, int retryInterval, T exception)
+            where T : Exception
+        {
+            if (!Settings.LoggingLevel.IsAcceptedLevel()) return;
+            
+            var url = Settings.FullLoggingLevel.IsAcceptedLevel()
+                ? body.Url
+                : ShortenUrl(body.Url);
+            
+            Debug.LogWarning($"Connection error on attempt {attempt}: " +
+                             $"{exception.Message}. Retry after {retryInterval} ms...\n" +
+                             $"url: {url}" +
+                             $"Exception:\n{exception}");
+        }
         
-        internal static void PrintFailLog(IRequestBody body, JToken response)
+        internal static void PrintFailLog<T>(IRequestBody body, T exception)
+            where T : Exception
         {
             if (!Settings.LoggingLevel.IsAcceptedLevel()) return;
 
@@ -81,8 +98,9 @@ namespace AceLand.WebRequest
                 : ShortenUrl(body.Url);
             var msg = $"Request Fail: {body.RequestMethod} || {url}";
             if (Settings.ResultLoggingLevel.IsAcceptedLevel())
-                msg += $"\n{response}";
-            Debug.Log(msg);
+                msg += $"\n{exception}";
+            
+            Debug.LogWarning(msg);
         }
 
         private static List<FormData> GetHeader()
