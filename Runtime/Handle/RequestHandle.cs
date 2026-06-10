@@ -207,6 +207,8 @@ namespace AceLand.WebRequest.Handle
             await Task.Delay(retryInterval, LinkedToken);
             
             RequestMessage = RequestUtils.CreateRequestMessage(Body);
+            
+            RenewLinkedTokenSource();
         }
 
         private void RenewLinkedTokenSource()
