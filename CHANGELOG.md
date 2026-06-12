@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [2.4.19] - 2026-06-12
+### Fixed
+- [Request Handle] request timeout randomly issue
+
 ## [2.4.18] - 2026-06-10
 ### Modified
 - [Request Handle] arrange log printing
