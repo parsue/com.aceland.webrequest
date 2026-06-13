@@ -5,12 +5,12 @@ namespace AceLand.WebRequest.Exceptions
 {
     public sealed class BadRequestException : HttpErrorException
     {
-        public BadRequestException(string body)
-            : base(HttpStatusCode.BadRequest, body)
+        public BadRequestException(string message)
+            : base(HttpStatusCode.BadRequest, message)
         { }
 
-        public BadRequestException(string body, Exception inner)
-            : base(HttpStatusCode.BadRequest, body, inner)
+        public BadRequestException(string message, Exception inner)
+            : base(HttpStatusCode.BadRequest, message, inner)
         { }
     }
 }

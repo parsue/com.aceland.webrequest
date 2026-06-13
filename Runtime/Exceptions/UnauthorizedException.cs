@@ -5,12 +5,12 @@ namespace AceLand.WebRequest.Exceptions
 {
     public sealed class UnauthorizedException : HttpErrorException
     {
-        public UnauthorizedException(string body)
-            : base(HttpStatusCode.Unauthorized, body)
+        public UnauthorizedException(string message)
+            : base(HttpStatusCode.Unauthorized, message)
         { }
 
-        public UnauthorizedException(string body, Exception inner)
-            : base(HttpStatusCode.Unauthorized, body, inner)
+        public UnauthorizedException(string message, Exception inner)
+            : base(HttpStatusCode.Unauthorized, message, inner)
         { }
     }
 }

@@ -93,6 +93,7 @@ namespace AceLand.WebRequest.Handle
                                 ? response
                                 : $"{{\"message\":\"{response ?? string.Empty}\"}}";
                             
+                            // 200-204
                             if (Response.IsSuccessStatusCode)
                             {
                                 if (Response.Headers.TryGetValues("Set-Cookie", out var cookieValues))
@@ -119,25 +120,42 @@ namespace AceLand.WebRequest.Handle
                                     Promise.Dispatcher.Run(EventBus.Event<IServerErrorEvent>().WithData(seEx).RaiseWithoutCache);
                                     throw seEx;
                                 
+                                // 400
                                 case HttpStatusCode.BadRequest:
                                     var brEx = new BadRequestException(response);
                                     Request.PrintFailLog(Body, brEx);
                                     throw brEx;
                                 
+                                // 401
                                 case HttpStatusCode.Unauthorized:
                                     var uEx = new UnauthorizedException(response);
                                     Request.PrintFailLog(Body, uEx);
                                     Promise.Dispatcher.Run(EventBus.Event<IUnauthorizedEvent>().WithData(uEx).RaiseWithoutCache);
                                     throw uEx;
                                 
+                                // 403
+                                case HttpStatusCode.Forbidden:
+                                    var fEx = new ForbiddenException(response);
+                                    Request.PrintFailLog(Body, fEx);
+                                    throw fEx;
+                                
+                                // 404
                                 case HttpStatusCode.NotFound:
                                     var nfEx = new NotFoundException(response);
                                     Request.PrintFailLog(Body, nfEx);
                                     throw nfEx;
                                 
+                                // 409
+                                case HttpStatusCode.Conflict:
+                                    var cEx = new ConflictException(response);
+                                    Request.PrintFailLog(Body, cEx);
+                                    throw cEx;
+                                
                                 // Throw an exception for other HTTP errors
                                 default:
-                                    throw new HttpErrorException(httpStatusCode, response);
+                                    var heEx = new HttpErrorException(httpStatusCode, response);
+                                    Request.PrintFailLog(Body, heEx);
+                                    throw heEx;
                             }
                         }
                         catch (HttpRequestException ex)

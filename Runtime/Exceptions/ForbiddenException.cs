@@ -3,13 +3,13 @@ using System.Net;
 
 namespace AceLand.WebRequest.Exceptions
 {
-    public sealed class NotFoundException : HttpErrorException
+    public sealed class ForbiddenException : HttpErrorException
     {
-        public NotFoundException(string message)
+        public ForbiddenException(string message)
             : base(HttpStatusCode.NotFound, message)
         { }
 
-        public NotFoundException(string message, Exception inner)
+        public ForbiddenException(string message, Exception inner)
             : base(HttpStatusCode.NotFound, message, inner)
         { }
     }

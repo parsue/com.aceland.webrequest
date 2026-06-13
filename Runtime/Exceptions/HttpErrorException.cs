@@ -5,21 +5,18 @@ namespace AceLand.WebRequest.Exceptions
 {
     public class HttpErrorException : Exception
     {
-        public HttpErrorException(HttpStatusCode statusCode, string body)
-            : base($"HTTP {(int)statusCode} {statusCode}")
+        public HttpErrorException(HttpStatusCode statusCode, string message)
+            : base(message)
         {
             StatusCode = statusCode;
-            ResponseBody = body;
         }
         
-        public HttpErrorException(HttpStatusCode statusCode, string body, Exception inner)
-            : base($"HTTP {(int)statusCode} {statusCode}", inner)
+        public HttpErrorException(HttpStatusCode statusCode, string message, Exception inner)
+            : base(message, inner)
         {
             StatusCode = statusCode;
-            ResponseBody = body;
         }
         
         public HttpStatusCode StatusCode { get; }
-        public string ResponseBody { get; }
     }
 }
