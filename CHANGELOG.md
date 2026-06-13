@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [2.4.20] - 2026-06-13
+### Added
+- [Request Handle] Forbidden (403) Exception
+- [Request Handle] Conflict (409) Exception
+### Modified
+- [Request Handle] remove Exception.ResponseBody, directly use Exception.Message
+
 ## [2.4.19] - 2026-06-12
 ### Fixed
 - [Request Handle] request timeout randomly issue
