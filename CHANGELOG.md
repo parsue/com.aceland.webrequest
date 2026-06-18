@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [2.4.21] - 2026-06-18
+### Modified
+- [Request Handle] optimized exception handling
+
 ## [2.4.20] - 2026-06-13
 ### Added
 - [Request Handle] Forbidden (403) Exception
