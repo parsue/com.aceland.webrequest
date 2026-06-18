@@ -1,6 +1,7 @@
 using System;
 using System.Net;
 using System.Net.Http;
+using System.Runtime.ExceptionServices;
 using System.Threading;
 using System.Threading.Tasks;
 using AceLand.Disposable;
@@ -32,6 +33,7 @@ namespace AceLand.WebRequest.Handle
 
         protected override void DisposeManagedResources()
         {
+            Response?.Dispose();
             LinkedTokenSource?.Dispose();
             LinkedRequestTokenSource?.Dispose();
             TokenSource?.Dispose();
@@ -41,7 +43,7 @@ namespace AceLand.WebRequest.Handle
         }
 
         private static AceLandWebRequestSettings Settings => Request.Settings;
-        
+
         public HttpResponseMessage Response { get; private set; }
         public JToken Result { get; private set; }
         private HttpClient Client { get; }
@@ -54,182 +56,208 @@ namespace AceLand.WebRequest.Handle
         private CancellationToken LinkedToken => LinkedTokenSource.Token;
         private CancellationToken LinkedRequestToken => LinkedRequestTokenSource.Token;
 
-        private WebException retryException;
+        private Exception retryException;
 
-        public void Cancel()
-        {
-            LinkedTokenSource?.Cancel();
-            TokenSource?.Cancel();
-        }
+        public void Cancel() => TokenSource?.Cancel();
 
-        public Task<T> Send<T>()
+        public async Task<T> Send<T>()
         {
-            return Task.Run(async () =>
-                {
-                    var result = await Send();
-                    var data = result.ToObject<T>();
-                    return data;
-                },
-                LinkedToken
-            );
+            var result = await Send().ConfigureAwait(false);
+            try
+            {
+                return result.ToObject<T>();
+            }
+            catch (JsonException ex)
+            {
+                Request.PrintFailLog(Body, ex);
+                throw;
+            }
         }
 
         public Task<JToken> Send()
         {
             RenewLinkedTokenSource();
-
             Request.PrintRequestLog(Body);
 
-            return Task.Run(async () =>
+            return Task.Run(SendInternal, LinkedToken);
+        }
+
+        private async Task<JToken> SendInternal()
+        {
+            var maxAttempts = Math.Max(1, Settings.RequestRetry);
+
+            for (var attempt = 1; attempt <= maxAttempts; attempt++)
+            {
+                Response?.Dispose();
+                Response = null;
+
+                try
                 {
-                    for (var attempt = 1; attempt <= Settings.RequestRetry; attempt++)
+                    Response = await Client.SendAsync(RequestMessage, LinkedRequestToken)
+                        .ConfigureAwait(false);
+
+                    var response = await Response.Content.ReadAsStringAsync()
+                        .ConfigureAwait(false);
+
+                    // properly escape non-JSON payloads
+                    var jsonResponse = response.IsValidJson()
+                        ? response
+                        : new JObject { ["message"] = response ?? string.Empty }.ToString();
+
+                    // 2xx
+                    if (Response.IsSuccessStatusCode)
                     {
-                        try
+                        if (Response.Headers.TryGetValues("Set-Cookie", out var cookieValues))
                         {
-                            Response = await Client.SendAsync(RequestMessage, LinkedRequestToken);
+                            var cookie = string.Join("; ", cookieValues);
+                            Request.SetRawCookie(cookie);
+                        }
 
-                            var response = await Response.Content.ReadAsStringAsync();
-                            var jsonResponse = response.IsValidJson()
-                                ? response
-                                : $"{{\"message\":\"{response ?? string.Empty}\"}}";
-                            
-                            // 200-204
-                            if (Response.IsSuccessStatusCode)
-                            {
-                                if (Response.Headers.TryGetValues("Set-Cookie", out var cookieValues))
-                                {
-                                    var cookie = string.Join("; ", cookieValues);
-                                    Request.SetRawCookie(cookie);
-                                }
-                                
-                                Result = JToken.Parse(jsonResponse);
-                                Request.PrintSuccessLog(Body, Result);
-
-                                return Result;
-                            }
-
-                            var httpStatusCode = Response.StatusCode;
-
-                            switch (httpStatusCode)
-                            {
-                                // server errors (5xx) and rate limiting (429)
-                                case HttpStatusCode.InternalServerError: 
-                                case HttpStatusCode.TooManyRequests:
-                                    var seEx = new ServerErrorException(httpStatusCode, response);
-                                    Request.PrintFailLog(Body, seEx);
-                                    Promise.Dispatcher.Run(EventBus.Event<IServerErrorEvent>().WithData(seEx).RaiseWithoutCache);
-                                    throw seEx;
-                                
-                                // 400
-                                case HttpStatusCode.BadRequest:
-                                    var brEx = new BadRequestException(response);
-                                    Request.PrintFailLog(Body, brEx);
-                                    throw brEx;
-                                
-                                // 401
-                                case HttpStatusCode.Unauthorized:
-                                    var uEx = new UnauthorizedException(response);
-                                    Request.PrintFailLog(Body, uEx);
-                                    Promise.Dispatcher.Run(EventBus.Event<IUnauthorizedEvent>().WithData(uEx).RaiseWithoutCache);
-                                    throw uEx;
-                                
-                                // 403
-                                case HttpStatusCode.Forbidden:
-                                    var fEx = new ForbiddenException(response);
-                                    Request.PrintFailLog(Body, fEx);
-                                    throw fEx;
-                                
-                                // 404
-                                case HttpStatusCode.NotFound:
-                                    var nfEx = new NotFoundException(response);
-                                    Request.PrintFailLog(Body, nfEx);
-                                    throw nfEx;
-                                
-                                // 409
-                                case HttpStatusCode.Conflict:
-                                    var cEx = new ConflictException(response);
-                                    Request.PrintFailLog(Body, cEx);
-                                    throw cEx;
-                                
-                                // Throw an exception for other HTTP errors
-                                default:
-                                    var heEx = new HttpErrorException(httpStatusCode, response);
-                                    Request.PrintFailLog(Body, heEx);
-                                    throw heEx;
-                            }
-                        }
-                        catch (HttpRequestException ex)
-                        {
-                            if (ex.InnerException is WebException we)
-                            {
-                                retryException = we;
-                                await HandleRetry(attempt);
-                            }
-                            else
-                            {
-                                Request.PrintFailLog(Body, ex);
-                                throw ex.InnerException ?? ex;
-                            }
-                        }
-                        catch (WebException ex)
-                        {
-                            retryException = ex;
-                            await HandleRetry(attempt);
-                        }
-                        catch (TaskCanceledException ex)
-                        {
-                            // Check if the cancellation was user-initiated
-                            if (LinkedToken.IsCancellationRequested)
-                            {
-                                var ocEx = new OperationCanceledException(
-                                    "The request was canceled by the user.",
-                                    ex,
-                                    LinkedToken
-                                );
-                                Request.PrintFailLog(Body, ocEx);
-                                throw ocEx;
-                            }
-                            
-                            retryException = new WebException("Canceled by Connection Error", ex);
-                            await HandleRetry(attempt);
-                        }
-                        catch (JsonReaderException ex)
-                        {
-                            Request.PrintFailLog(Body, ex);
-                            throw;
-                        }
-                        catch (Exception ex)
-                        {
-                            var e = ex.InnerException ?? ex.GetBaseException();
-                            if (e != null) throw e;
-                            
-                            // For non-retryable errors, rethrow immediately
-                            Request.PrintFailLog(Body, ex);
-                            throw new Exception($"Request failed: {ex.Message}", ex);
-                        }
+                        Result = JToken.Parse(jsonResponse);
+                        Request.PrintSuccessLog(Body, Result);
+                        return Result;
                     }
 
-                    // Handle connection-related errors
-                    Request.PrintFailLog(Body, retryException);
-                    Promise.Dispatcher.Run(EventBus.Event<IConnectionErrorEvent>().WithData(retryException).RaiseWithoutCache);
-                    throw retryException;
-                },
-                LinkedToken
-            );
+                    var httpStatusCode = Response.StatusCode;
+                    var statusInt = (int)httpStatusCode;
+
+                    // treat ALL 5xx and 429 as retryable
+                    if (statusInt >= 500 || httpStatusCode == HttpStatusCode.TooManyRequests)
+                    {
+                        var seEx = new ServerErrorException(httpStatusCode, response);
+                        Request.PrintFailLog(Body, seEx);
+                        Promise.Dispatcher.Run(EventBus.Event<IServerErrorEvent>()
+                            .WithData(seEx).RaiseWithoutCache);
+
+                        if (attempt >= maxAttempts)
+                            throw seEx;
+
+                        retryException = seEx;
+                        await HandleRetry(attempt).ConfigureAwait(false);
+                        continue;
+                    }
+
+                    // Non-retryable HTTP errors -> throw and let them propagate.
+                    switch (httpStatusCode)
+                    {
+                        case HttpStatusCode.BadRequest:
+                        {
+                            var ex = new BadRequestException(response);
+                            Request.PrintFailLog(Body, ex);
+                            throw ex;
+                        }
+                        case HttpStatusCode.Unauthorized:
+                        {
+                            var ex = new UnauthorizedException(response);
+                            Request.PrintFailLog(Body, ex);
+                            Promise.Dispatcher.Run(EventBus.Event<IUnauthorizedEvent>()
+                                .WithData(ex).RaiseWithoutCache);
+                            throw ex;
+                        }
+                        case HttpStatusCode.Forbidden:
+                        {
+                            var ex = new ForbiddenException(response);
+                            Request.PrintFailLog(Body, ex);
+                            throw ex;
+                        }
+                        case HttpStatusCode.NotFound:
+                        {
+                            var ex = new NotFoundException(response);
+                            Request.PrintFailLog(Body, ex);
+                            throw ex;
+                        }
+                        case HttpStatusCode.Conflict:
+                        {
+                            var ex = new ConflictException(response);
+                            Request.PrintFailLog(Body, ex);
+                            throw ex;
+                        }
+                        default:
+                        {
+                            var ex = new HttpErrorException(httpStatusCode, response);
+                            Request.PrintFailLog(Body, ex);
+                            throw ex;
+                        }
+                    }
+                }
+                catch (HttpRequestException ex)
+                {
+                    if (ex.InnerException is WebException we)
+                    {
+                        retryException = we;
+                        if (attempt >= maxAttempts) break;
+                        await HandleRetry(attempt).ConfigureAwait(false);
+                    }
+                    else
+                    {
+                        Request.PrintFailLog(Body, ex);
+                        if (ex.InnerException != null)
+                            ExceptionDispatchInfo.Capture(ex.InnerException).Throw();
+                        throw;
+                    }
+                }
+                catch (WebException ex)
+                {
+                    retryException = ex;
+                    if (attempt >= maxAttempts) break;
+                    await HandleRetry(attempt).ConfigureAwait(false);
+                }
+                catch (OperationCanceledException ex)
+                    // covers both TaskCanceledException and OperationCanceledException
+                {
+                    // User-initiated cancel (this also covers cancel during Task.Delay)
+                    if (LinkedToken.IsCancellationRequested)
+                    {
+                        var ocEx = new OperationCanceledException(
+                            "The request was canceled by the user.",
+                            ex,
+                            LinkedToken);
+                        Request.PrintFailLog(Body, ocEx);
+                        throw ocEx;
+                    }
+
+                    // Otherwise it's a per-request timeout -> retryable
+                    retryException = new WebException("Canceled by Connection Error", ex);
+                    if (attempt >= maxAttempts) break;
+                    await HandleRetry(attempt).ConfigureAwait(false);
+                }
+                catch (JsonException ex)
+                {
+                    // Covers JsonReaderException and other Newtonsoft Json failures
+                    Request.PrintFailLog(Body, ex);
+                    throw;
+                }
+                // exception propagate naturally with its original stack trace.
+            }
+
+            Request.PrintFailLog(Body, retryException);
+            
+            switch (retryException)
+            {
+                case WebException e:
+                    Promise.Dispatcher.Run(EventBus.Event<IConnectionErrorEvent>().WithData(e).RaiseWithoutCache);
+                    break;
+                case ServerErrorException e:
+                    Promise.Dispatcher.Run(EventBus.Event<IServerErrorEvent>().WithData(e).RaiseWithoutCache);
+                    break;
+            }
+            
+            throw retryException;
         }
 
         private async Task HandleRetry(int attempt)
         {
+            if (attempt >= Math.Max(1, Settings.RequestRetry))
+                return;
+
             var retryInterval = Settings.GetRetryInterval(attempt);
-            
             Request.PrintRetryLog(Body, attempt, retryInterval, retryException);
-            
+
             RequestMessage?.Dispose();
-            
-            await Task.Delay(retryInterval, LinkedToken);
-            
+
+            await Task.Delay(retryInterval, LinkedToken).ConfigureAwait(false);
+
             RequestMessage = RequestUtils.CreateRequestMessage(Body);
-            
             RenewLinkedTokenSource();
         }
 
@@ -237,7 +265,7 @@ namespace AceLand.WebRequest.Handle
         {
             RequestTokenSource?.Dispose();
             LinkedRequestTokenSource?.Dispose();
-            
+
             RequestTokenSource = new CancellationTokenSource();
             RequestTokenSource.CancelAfter(TimeSpan.FromMilliseconds(Body.Timeout));
             Promise.LinkedOrApplicationAliveToken(RequestTokenSource, out var linkedRequestTokenSource);
