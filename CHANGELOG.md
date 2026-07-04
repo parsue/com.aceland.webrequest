@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [2.4.22] - 2026-07-04
+### Added
+- [API Sections Profile] add max concurrent request
+- [Project Settings] add max concurrent request without api sections profile
+
 ## [2.4.21] - 2026-06-18
 ### Modified
 - [Request Handle] optimized exception handling
