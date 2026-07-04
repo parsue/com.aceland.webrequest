@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [2.5.0] - 2026-07-04
+### Modified
+- Road to Unity 6000.5 or newer
+
 ## [2.4.22] - 2026-07-04
 ### Added
 - [API Sections Profile] add max concurrent request
