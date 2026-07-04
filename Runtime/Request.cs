@@ -4,6 +4,7 @@ using AceLand.ProjectSetting;
 using AceLand.WebRequest.Core;
 using AceLand.WebRequest.ProjectSetting;
 using Newtonsoft.Json.Linq;
+using Unity.Scripting.LifecycleManagement;
 using UnityEngine;
 using ZLinq;
 
@@ -20,6 +21,9 @@ namespace AceLand.WebRequest
             }
         }
         
+#if UNITY_6000_5_OR_NEWER
+        [AutoStaticsCleanup]
+#endif
         private static AceLandWebRequestSettings _settings;
 
         public static IUrlBuilder Get() =>
