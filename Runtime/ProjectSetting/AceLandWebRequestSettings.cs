@@ -8,11 +8,19 @@ namespace AceLand.WebRequest.ProjectSetting
 {
     public class AceLandWebRequestSettings : ProjectSettings<AceLandWebRequestSettings>
     {
+        // Logging
         [SerializeField] private BuildLevel loggingLevel = BuildLevel.Production;
         [SerializeField] private BuildLevel resultLoggingLevel = BuildLevel.Development;
         [SerializeField] private BuildLevel fullLoggingLevel = BuildLevel.Development;
+        
+        // Checking Options
         [SerializeField] private bool checkJsonBeforeSend;
         [SerializeField] private bool forceHttpsScheme = true;
+        
+        //Concurrent Options
+        [SerializeField, Range(0, 50)] private int maxConcurrentRequests = 10;
+        
+        // Request Options (ms)
         [SerializeField] private bool addTimeInHeader = true;
         [SerializeField] private string timeKey = "Time";
         [SerializeField] private List<HeaderData> autoFillHeaders = new()
@@ -48,6 +56,8 @@ namespace AceLand.WebRequest.ProjectSetting
         public bool AddTimeInHeader => addTimeInHeader;
         public string TimeKey => timeKey;
 
+        public int MaxConcurrentRequests => maxConcurrentRequests;
+        
         public int RequestTimeout => requestTimeout;
         public int LongRequestTimeout => longRequestTimeout;
         public int RequestRetry => requestRetry;

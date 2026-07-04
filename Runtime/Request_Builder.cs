@@ -48,6 +48,10 @@ namespace AceLand.WebRequest
 
                 _body.Url = _url;
 
+                _body.MaxConcurrentRequests = _withoutSection || !section
+                    ? Settings.MaxConcurrentRequests
+                    : section.MaxConcurrentRequests;
+
                 if (!_withoutSection)
                 {
                     var headers = GetHeader().AsValueEnumerable()
@@ -59,7 +63,7 @@ namespace AceLand.WebRequest
                 if (_body.Timeout <= 0)
                     _body.Timeout = Settings.RequestTimeout;
                 
-                _body.Fingerprint = _withoutSection
+                _body.Fingerprint = _withoutSection || !section
                     ? null
                     : section.RootCaFingerprint;
                 

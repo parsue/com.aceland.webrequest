@@ -72,6 +72,7 @@ namespace AceLand.WebRequest
 
             private readonly RequestMethod _requestMethod;
             private string _url;
+            private int _maxConRequest;
             private bool _withoutSection;
             private float _timeout = -1;
             private (string key, string token) _token;
@@ -93,6 +94,10 @@ namespace AceLand.WebRequest
 
                 if (!CheckUrl(_url))
                     throw new Exception($"Invalid Url : {_url}");
+
+                _maxConRequest = _withoutSection || !section
+                    ? Settings.MaxConcurrentRequests
+                    : section.MaxConcurrentRequests;
                 
                 if (!_token.key.IsNullOrEmptyOrWhiteSpace() && !_token.token.IsNullOrEmptyOrWhiteSpace())
                     _headers.Add(new FormData(_token.key, _token.token));
@@ -108,7 +113,7 @@ namespace AceLand.WebRequest
                 if (_timeout <= 0)
                     _timeout = Settings.RequestTimeout;
 
-                var fingerprint = _withoutSection
+                var fingerprint = _withoutSection || !section
                     ? null
                     : section.RootCaFingerprint;
                 
@@ -314,6 +319,7 @@ namespace AceLand.WebRequest
                         var jsonBody = new JsonBody();
                         jsonBody.RequestMethod = _requestMethod;
                         jsonBody.Url = _url;
+                        jsonBody.MaxConcurrentRequests = _maxConRequest;
                         jsonBody.Timeout = _timeout;
                         jsonBody.Headers.AddRange(_headers);
                         jsonBody.Parameters.AddRange(_parameters);
@@ -324,6 +330,7 @@ namespace AceLand.WebRequest
                         var formBody = new FormBody();
                         formBody.RequestMethod = _requestMethod;
                         formBody.Url = _url;
+                        formBody.MaxConcurrentRequests = _maxConRequest;
                         formBody.Timeout = _timeout;
                         formBody.Headers.AddRange(_headers);
                         formBody.Parameters.AddRange(_parameters);
@@ -334,6 +341,7 @@ namespace AceLand.WebRequest
                         var multipartBody = new MultipartBody();
                         multipartBody.RequestMethod = _requestMethod;
                         multipartBody.Url = _url;
+                        multipartBody.MaxConcurrentRequests = _maxConRequest;
                         multipartBody.Timeout = _timeout;
                         multipartBody.Headers.AddRange(_headers);
                         multipartBody.Parameters.AddRange(_parameters);

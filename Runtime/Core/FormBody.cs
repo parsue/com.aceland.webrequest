@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using ZLinq;
 
 namespace AceLand.WebRequest.Core
 {
@@ -16,10 +17,13 @@ namespace AceLand.WebRequest.Core
 
         public override string BodyText()
         {
-            var text = string.Empty;
-            foreach (var data in Body)
-                text += $">>>>>> {data.Key} : {data.Value}\n";
-            text = text.TrimEnd('\n');
+            var text = Body.AsValueEnumerable()
+                .Aggregate(
+                    string.Empty,
+                    (current, data) => current + $">>>>>> {data.Key} : {data.Value}\n"
+                )
+                .TrimEnd('\n');
+            
             return text;
         }
 

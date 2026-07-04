@@ -22,12 +22,16 @@ namespace AceLand.WebRequest.Profiles
         [SerializeField] private string apiVersion;
         [SerializeField, ReadOnlyField] private string apiUrl;
         
+        [Header("Concurrent Options (0=unlimit)")]
+        [SerializeField, Range(0, 50)] private int maxConcurrentRequests = 10;
+        
         [Header("Private Root CA")]
         [SerializeField, ReadOnlyField] private string rootCaFingerprint;
         
         public string SectionName => sectionName;
         public string ApiUrl => apiUrl;
         public IEnumerable<HeaderData> Headers => headers;
+        public int MaxConcurrentRequests => maxConcurrentRequests;
         public string RootCaFingerprint => rootCaFingerprint;
 
         private void OnEnable()

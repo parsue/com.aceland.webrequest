@@ -38,6 +38,7 @@ namespace AceLand.WebRequest.Editor.ProjectSettingsProvider
                 out var loggingLevel, out var resultLoggingLevel,
                 out var fullLoggingLevel,
                 out var checkJsonBeforeSend, out var forceHttpsScheme,
+                out var maxConcurrentRequests,
                 out var addTimeInHeader, out var timeKey,
                 out var autoFillHeaders,
                 out var requestTimeout, out var longRequestTimeout,
@@ -56,6 +57,10 @@ namespace AceLand.WebRequest.Editor.ProjectSettingsProvider
             EditorGUILayout.LabelField("Checking Options", EditorStyles.boldLabel);
             DrawFixWidthProperty(checkJsonBeforeSend);
             DrawFixWidthProperty(forceHttpsScheme);
+            
+            EditorGUILayout.Space(12f);
+            EditorGUILayout.LabelField("Concurrent Options out of Section Profile (0=unlimit)", EditorStyles.boldLabel);
+            DrawFixWidthProperty(maxConcurrentRequests);
             
             EditorGUILayout.Space(12f);
             EditorGUILayout.LabelField("Request Options (time unit: ms)", EditorStyles.boldLabel);
@@ -98,6 +103,7 @@ namespace AceLand.WebRequest.Editor.ProjectSettingsProvider
             out SerializedProperty loggingLevel, out SerializedProperty resultLoggingLevel,
             out SerializedProperty fullLoggingLevel,
             out SerializedProperty checkJsonBeforeSend, out SerializedProperty forceHttpsScheme,
+            out SerializedProperty maxConcurrentRequests, 
             out SerializedProperty addTimeInHeader, out SerializedProperty timeKey,
             out SerializedProperty autoFillHeaders, 
             out SerializedProperty requestTimeout, out SerializedProperty longRequestTimeout,
@@ -109,6 +115,7 @@ namespace AceLand.WebRequest.Editor.ProjectSettingsProvider
             fullLoggingLevel = Settings.FindProperty("fullLoggingLevel");
             checkJsonBeforeSend = Settings.FindProperty("checkJsonBeforeSend");
             forceHttpsScheme = Settings.FindProperty("forceHttpsScheme");
+            maxConcurrentRequests = Settings.FindProperty("maxConcurrentRequests");
             addTimeInHeader = Settings.FindProperty("addTimeInHeader");
             timeKey = Settings.FindProperty("timeKey");
             autoFillHeaders = Settings.FindProperty("autoFillHeaders");

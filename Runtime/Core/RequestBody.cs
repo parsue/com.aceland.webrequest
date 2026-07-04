@@ -40,7 +40,7 @@ namespace AceLand.WebRequest.Core
                 url = value;
             }
         }
-
+        public int MaxConcurrentRequests { get; internal set; } = -1;
         public float Timeout { get; internal set; } = -1;
         public string Fingerprint { get; internal set; } = null;
 

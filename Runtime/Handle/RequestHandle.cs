@@ -43,6 +43,7 @@ namespace AceLand.WebRequest.Handle
         }
 
         private static AceLandWebRequestSettings Settings => Request.Settings;
+        private static IConcurrentRequestsControl ConcurrentControl => ConcurrentRequestsControl.Instance;
 
         public HttpResponseMessage Response { get; private set; }
         public JToken Result { get; private set; }
@@ -74,12 +75,22 @@ namespace AceLand.WebRequest.Handle
             }
         }
 
-        public Task<JToken> Send()
+        public async Task<JToken> Send()
         {
-            RenewLinkedTokenSource();
-            Request.PrintRequestLog(Body);
+            try
+            {
+                await ConcurrentControl.AwaitForConcurrentReady(Body)
+                    .ConfigureAwait(false);
+            
+                RenewLinkedTokenSource();
+                Request.PrintRequestLog(Body);
 
-            return Task.Run(SendInternal, LinkedToken);
+                return await Task.Run(SendInternal, LinkedToken);
+            }
+            finally
+            {
+                ConcurrentControl.Completed(Body);
+            }
         }
 
         private async Task<JToken> SendInternal()
@@ -223,7 +234,7 @@ namespace AceLand.WebRequest.Handle
                 }
                 catch (JsonException ex)
                 {
-                    // Covers JsonReaderException and other Newtonsoft Json failures
+                    // Covers JsonReaderException and other Newtonsoft JSON failures
                     Request.PrintFailLog(Body, ex);
                     throw;
                 }
